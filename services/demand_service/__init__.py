@@ -1,0 +1,1 @@
+"""Demand intelligence domain logic."""

@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: distance-risk-pricing-api
+    runtime: python
+    plan: free
+    buildCommand: uv sync --no-dev
+    startCommand: uv run --no-dev uvicorn services.api_gateway.app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: ROUTING_BASE_URL
+        value: https://router.project-osrm.org
+      - key: PRICING_FORMULA_MODE
+        value: additive

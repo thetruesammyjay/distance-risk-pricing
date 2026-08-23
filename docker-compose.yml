@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: distance_risk_pricing
+      POSTGRES_USER: distance_risk_pricing
+      POSTGRES_PASSWORD: distance_risk_pricing
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:
+
