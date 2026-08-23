@@ -9,6 +9,8 @@ CENT = Decimal("0.01")
 
 
 def money(value: Decimal) -> Decimal:
+    if not value.is_finite():
+        raise ValueError("monetary values must be finite")
     return value.quantize(CENT, rounding=ROUND_HALF_UP)
 
 
@@ -27,7 +29,7 @@ class AdditivePricingStrategy(PricingStrategy):
         risk = config.risk_rate * context.distance_km * context.risk_score
         demand = config.demand_sensitivity * context.demand_multiplier
         return FareBreakdown(
-            currency="NGN",
+            currency=config.currency,
             base_fare=money(base),
             distance_component=money(distance),
             risk_adjustment=money(risk),
@@ -49,7 +51,7 @@ class MultiplicativePricingStrategy(PricingStrategy):
         subtotal = base + distance + risk
         demand = subtotal * (context.demand_multiplier - Decimal("1"))
         return FareBreakdown(
-            currency="NGN",
+            currency=config.currency,
             base_fare=money(base),
             distance_component=money(distance),
             risk_adjustment=money(risk),

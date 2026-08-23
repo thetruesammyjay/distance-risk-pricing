@@ -36,6 +36,14 @@ def test_invalid_coordinates_use_error_envelope():
     assert response.json()["error"]["code"] == "VALIDATION_ERROR"
 
 
+def test_naive_timestamp_is_rejected():
+    invalid = payload()
+    invalid["requested_at"] = "2026-08-23T18:30:00"
+    response = TestClient(app).post("/api/v1/fares/estimate", json=invalid)
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "VALIDATION_ERROR"
+
+
 def test_fare_estimate_is_persisted_in_dev_repository(monkeypatch):
     monkeypatch.setattr(fare_service, "routing", StubRouting())
     client = TestClient(app)
@@ -48,3 +56,9 @@ def test_fare_estimate_is_persisted_in_dev_repository(monkeypatch):
     retrieved = client.get(f"/api/v1/fares/{quote['quote_id']}")
     assert retrieved.status_code == 200
     assert retrieved.json()["fare"]["total"] == quote["fare"]["total"]
+
+
+def test_missing_quote_returns_not_found():
+    response = TestClient(app).get("/api/v1/fares/00000000-0000-0000-0000-000000000000")
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "QUOTE_NOT_FOUND"

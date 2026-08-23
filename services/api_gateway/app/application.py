@@ -38,6 +38,11 @@ class FareEstimationService:
         self.demand = demand
         self.repository = repository
 
+    async def close(self) -> None:
+        close = getattr(self.routing, "close", None)
+        if close is not None:
+            await close()
+
     async def estimate(self, request: FareEstimateRequest) -> FareEstimateResponse:
         origin = Coordinates(request.origin.latitude, request.origin.longitude)
         destination = Coordinates(request.destination.latitude, request.destination.longitude)
@@ -94,6 +99,7 @@ class FareEstimationService:
                 components_available=list(risk.components_available),
                 components_missing=list(risk.components_missing),
                 weight_strategy=risk.weight_strategy,
+                source_type=risk.source_type,
                 data_sources=list(risk.data_sources),
                 model_version=risk.model_version,
             ),

@@ -3,20 +3,25 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=False)
 
-    app_env: str = "development"
+    app_env: Literal["development", "staging", "production"] = "development"
     app_name: str = "distance-risk-pricing"
     debug: bool = False
     database_url: str | None = None
+    database_pool_size: int = Field(default=5, ge=1, le=50)
+    database_max_overflow: int = Field(default=10, ge=0, le=100)
+    database_pool_timeout_seconds: int = Field(default=30, ge=1, le=120)
     frontend_url: str = "http://localhost:3000"
     routing_base_url: str = "https://router.project-osrm.org"
     routing_timeout_seconds: float = Field(default=10.0, gt=0)
+    routing_retries: int = Field(default=2, ge=0, le=5)
+    routing_profile: str = "driving"
     pricing_base_fare: Decimal = Field(default=Decimal("500"), ge=0)
     pricing_distance_rate: Decimal = Field(default=Decimal("150"), ge=0)
     pricing_risk_rate: Decimal = Field(default=Decimal("1"), ge=0)
@@ -30,6 +35,9 @@ class Settings(BaseSettings):
     risk_road_weight: Decimal = Field(default=Decimal("0.3"), ge=0)
     risk_security_weight: Decimal = Field(default=Decimal("0.3"), ge=0)
     demand_mode: str = "simulated"
+    demand_simulated_requests: int = Field(default=42, ge=0)
+    demand_simulated_drivers: int = Field(default=28, ge=0)
+    allow_simulated_data: bool = False
     simulation_seed: int = 42
     log_level: str = "INFO"
 
@@ -40,6 +48,26 @@ class Settings(BaseSettings):
         if isinstance(value, str) and value.lower() in {"release", "production", "prod"}:
             return False
         return value
+
+    @model_validator(mode="after")
+    def validate_runtime_safety(self) -> Settings:
+        weights = (
+            self.risk_accident_weight,
+            self.risk_road_weight,
+            self.risk_security_weight,
+        )
+        if sum(weights, Decimal("0")) != Decimal("1"):
+            raise ValueError("risk weights must sum to 1")
+        if self.app_env == "production":
+            if not self.database_url:
+                raise ValueError("DATABASE_URL is required in production")
+            if not self.allow_simulated_data and (
+                self.risk_mode == "simulated" or self.demand_mode == "simulated"
+            ):
+                raise ValueError("simulated risk or demand is disabled in production")
+        if self.frontend_url.strip() == "*":
+            raise ValueError("wildcard CORS is not permitted")
+        return self
 
 
 def get_settings() -> Settings:

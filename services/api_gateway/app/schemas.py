@@ -3,14 +3,21 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    FiniteFloat,
+    field_validator,
+    model_validator,
+)
 
 
 class CoordinateInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    latitude: float = Field(ge=-90, le=90)
-    longitude: float = Field(ge=-180, le=180)
+    latitude: FiniteFloat = Field(ge=-90, le=90)
+    longitude: FiniteFloat = Field(ge=-180, le=180)
 
 
 class FareEstimateRequest(BaseModel):
@@ -19,6 +26,13 @@ class FareEstimateRequest(BaseModel):
     origin: CoordinateInput
     destination: CoordinateInput
     requested_at: datetime
+
+    @field_validator("requested_at")
+    @classmethod
+    def requested_at_must_include_timezone(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("requested_at must include a timezone offset")
+        return value
 
     @model_validator(mode="after")
     def points_must_differ(self) -> FareEstimateRequest:
@@ -47,6 +61,7 @@ class RiskResponse(BaseModel):
     components_available: list[str]
     components_missing: list[str]
     weight_strategy: str
+    source_type: str
     data_sources: list[str]
     model_version: str
 

@@ -20,6 +20,7 @@ out/
 coverage/
 dist/
 build/
+*.egg-info/
 *.log
 *.sqlite3
 data/raw/*

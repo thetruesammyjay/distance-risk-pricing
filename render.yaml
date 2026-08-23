@@ -13,6 +13,12 @@ services:
         sync: false
       - key: FRONTEND_URL
         sync: false
+      - key: RISK_MODE
+        value: external
+      - key: DEMAND_MODE
+        value: external
+      - key: ALLOW_SIMULATED_DATA
+        value: "false"
       - key: ROUTING_BASE_URL
         value: https://router.project-osrm.org
       - key: PRICING_FORMULA_MODE

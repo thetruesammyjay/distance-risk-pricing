@@ -28,6 +28,7 @@ export type FareQuote = {
     components_available: string[];
     components_missing: string[];
     weight_strategy: string;
+    source_type: string;
     data_sources: string[];
     model_version: string;
   };
@@ -51,4 +52,3 @@ export type FareQuote = {
 };
 
 export type ApiError = { error: { code: string; message: string; details?: unknown } };
-

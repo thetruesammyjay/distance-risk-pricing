@@ -9,10 +9,14 @@
 - SQLAlchemy models, Alembic initial migration, and in-memory development repository.
 - Next.js pages for the documented MVP routes.
 - Backend unit/API test foundation and GitHub Actions workflow.
+- Provider interfaces, pooled routing HTTP, bounded retries, sanitized API errors,
+  production configuration guards, and exact PostgreSQL numeric persistence.
 
 ## Planned
 
 - PostgreSQL integration tests against a managed or containerized database.
+- Replace the unavailable external risk and demand adapters with verified data
+  sources before enabling production fare estimation.
 - Research dataset preparation and provenance-controlled ML experiments.
 - Production map provider rendering and calibrated pricing coefficients.
 
@@ -24,4 +28,3 @@
 
 All values in the local simulation mode are placeholders and are labelled as
 simulated; they are not research findings.
-
