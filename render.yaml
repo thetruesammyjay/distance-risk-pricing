@@ -15,10 +15,26 @@ services:
         sync: false
       - key: RISK_MODE
         value: external
+      - key: RISK_PROVIDER_URL
+        sync: false
+      - key: RISK_PROVIDER_API_KEY
+        sync: false
       - key: DEMAND_MODE
         value: external
+      - key: DEMAND_PROVIDER_URL
+        sync: false
+      - key: DEMAND_PROVIDER_API_KEY
+        sync: false
       - key: ALLOW_SIMULATED_DATA
         value: "false"
+      - key: API_AUTH_ENABLED
+        value: "true"
+      - key: API_KEY
+        sync: false
+      - key: RATE_LIMIT_REQUESTS
+        value: "120"
+      - key: RATE_LIMIT_WINDOW_SECONDS
+        value: "60"
       - key: ROUTING_BASE_URL
         value: https://router.project-osrm.org
       - key: PRICING_FORMULA_MODE

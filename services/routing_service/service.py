@@ -20,3 +20,12 @@ class RoutingService:
         close = getattr(self.provider, "close", None)
         if close is not None:
             await close()
+
+    async def ready(self) -> bool:
+        method = getattr(self.provider, "health_check", None)
+        if method is None:
+            return True
+        result = method()
+        if hasattr(result, "__await__"):
+            result = await result
+        return bool(result)

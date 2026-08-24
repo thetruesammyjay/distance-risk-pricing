@@ -33,6 +33,9 @@ class OSRMAdapter:
         if self.client is not None:
             await self.client.aclose()
 
+    async def health_check(self) -> bool:
+        return bool(self.base_url and self.profile)
+
     async def get_route(self, origin: Coordinates, destination: Coordinates) -> RouteResult:
         url = (
             f"{self.base_url}/route/v1/{self.profile}/"

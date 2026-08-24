@@ -8,10 +8,12 @@ from services.api_gateway.app.application import FareEstimationService
 from services.api_gateway.app.config import Settings
 from services.demand_service.service import (
     DemandService,
+    ExternalDemandProvider,
     SimulatedDemandProvider,
     UnavailableDemandProvider,
 )
 from services.risk_service.service import (
+    ExternalRiskProvider,
     RiskComponents,
     RiskService,
     SimulatedRiskProvider,
@@ -36,11 +38,22 @@ def build_fare_service(settings: Settings) -> FareEstimationService:
             client=client,
         )
     )
-    risk_provider = (
-        SimulatedRiskProvider(settings.simulation_seed)
-        if settings.risk_mode == "simulated"
-        else UnavailableRiskProvider()
-    )
+    if settings.risk_mode == "simulated":
+        risk_provider = SimulatedRiskProvider(settings.simulation_seed)
+    elif settings.risk_provider_url:
+        risk_provider = ExternalRiskProvider(
+            settings.risk_provider_url,
+            client=client,
+            api_key=(
+                settings.risk_provider_api_key.get_secret_value()
+                if settings.risk_provider_api_key
+                else None
+            ),
+            timeout_seconds=settings.provider_timeout_seconds,
+            retries=settings.provider_retries,
+        )
+    else:
+        risk_provider = UnavailableRiskProvider()
     risk = RiskService(
         risk_provider,
         RiskComponents(
@@ -49,13 +62,24 @@ def build_fare_service(settings: Settings) -> FareEstimationService:
             security=settings.risk_security_weight,
         ),
     )
-    demand_provider = (
-        SimulatedDemandProvider(
+    if settings.demand_mode == "simulated":
+        demand_provider = SimulatedDemandProvider(
             settings.demand_simulated_requests, settings.demand_simulated_drivers
         )
-        if settings.demand_mode == "simulated"
-        else UnavailableDemandProvider()
-    )
+    elif settings.demand_provider_url:
+        demand_provider = ExternalDemandProvider(
+            settings.demand_provider_url,
+            client=client,
+            api_key=(
+                settings.demand_provider_api_key.get_secret_value()
+                if settings.demand_provider_api_key
+                else None
+            ),
+            timeout_seconds=settings.provider_timeout_seconds,
+            retries=settings.provider_retries,
+        )
+    else:
+        demand_provider = UnavailableDemandProvider()
     demand = DemandService(
         demand_provider,
         settings.pricing_demand_sensitivity,

@@ -5,6 +5,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from typing import Protocol
 
+from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -28,6 +29,9 @@ class InMemoryFareQuoteRepository:
 
     async def get(self, quote_id: str) -> dict[str, object] | None:
         return self._quotes.get(quote_id)
+
+    async def health_check(self) -> bool:
+        return True
 
 
 class SqlAlchemyFareQuoteRepository:
@@ -96,6 +100,17 @@ class SqlAlchemyFareQuoteRepository:
 
     async def get(self, quote_id: str) -> dict[str, object] | None:
         return await asyncio.to_thread(self._get_sync, quote_id)
+
+    async def health_check(self) -> bool:
+        return await asyncio.to_thread(self._health_check_sync)
+
+    def _health_check_sync(self) -> bool:
+        try:
+            with self.factory() as session:
+                session.execute(text("SELECT 1"))
+            return True
+        except SQLAlchemyError:
+            return False
 
     def _get_sync(self, quote_id: str) -> dict[str, object] | None:
         try:

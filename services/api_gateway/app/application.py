@@ -47,12 +47,12 @@ class FareEstimationService:
         origin = Coordinates(request.origin.latitude, request.origin.longitude)
         destination = Coordinates(request.destination.latitude, request.destination.longitude)
         route = await self.routing.estimate(origin, destination)
-        risk = self.risk.assess(
+        risk = await self.risk.assess(
             (origin.latitude, origin.longitude),
             (destination.latitude, destination.longitude),
             request.requested_at,
         )
-        demand = self.demand.estimate()
+        demand = await self.demand.estimate()
         pricing_config = PricingConfig(
             base_fare=self.settings.pricing_base_fare,
             distance_rate=self.settings.pricing_distance_rate,
@@ -124,6 +124,15 @@ class FareEstimationService:
         await self.repository.save(response.model_dump(mode="json"))
         return response
 
+    async def readiness(self) -> dict[str, bool]:
+        checks = {
+            "repository": await _check_async(self.repository, "health_check"),
+            "risk_provider": await self.risk.ready(),
+            "demand_provider": await self.demand.ready(),
+            "routing_provider": await _check_async(self.routing, "ready"),
+        }
+        return checks
+
 
 def route_response(route: RouteResult) -> RouteResponse:
     return RouteResponse(
@@ -132,3 +141,13 @@ def route_response(route: RouteResult) -> RouteResponse:
         geometry=route.geometry,
         provider=route.provider,
     )
+
+
+async def _check_async(target: object, method_name: str) -> bool:
+    method = getattr(target, method_name, None)
+    if method is None:
+        return True
+    result = method()
+    if hasattr(result, "__await__"):
+        result = await result
+    return bool(result)

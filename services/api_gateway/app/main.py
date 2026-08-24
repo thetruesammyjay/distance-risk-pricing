@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hmac
 import logging
 import time
 from contextlib import asynccontextmanager
@@ -9,11 +10,12 @@ from uuid import UUID, uuid4
 from fastapi import APIRouter, FastAPI, Path, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 from services.api_gateway.app.application import route_response
 from services.api_gateway.app.config import Settings, get_settings
 from services.api_gateway.app.dependencies import build_fare_service
+from services.api_gateway.app.observability import MetricsRegistry, SlidingWindowRateLimiter
 from services.api_gateway.app.schemas import (
     FareEstimateRequest,
     FareEstimateResponse,
@@ -54,12 +56,16 @@ def create_app(
     )
     application.state.settings = runtime_settings
     application.state.fare_service = runtime_service
+    application.state.metrics = MetricsRegistry()
+    application.state.rate_limiter = SlidingWindowRateLimiter(
+        runtime_settings.rate_limit_requests, runtime_settings.rate_limit_window_seconds
+    )
     application.add_middleware(
         CORSMiddleware,
         allow_origins=[origin.strip() for origin in runtime_settings.frontend_url.split(",")],
         allow_credentials=True,
         allow_methods=["GET", "POST"],
-        allow_headers=["*"],
+        allow_headers=["Content-Type", "X-API-Key", "X-Request-ID"],
     )
     application.middleware("http")(request_context)
     application.include_router(health_router)
@@ -72,19 +78,42 @@ def create_app(
 
 async def request_context(request: Request, call_next):
     request_id = request.headers.get("X-Request-ID", "").strip()
-    if not request_id or len(request_id) > 100:
+    if not request_id or len(request_id) > 100 or not all(
+        character.isalnum() or character in "-_." for character in request_id
+    ):
         request_id = str(uuid4())
     request.state.request_id = request_id
     started = time.perf_counter()
-    response = await call_next(request)
+    if _requires_auth(request) and not _authenticated(request):
+        response = _security_response(
+            401, "AUTHENTICATION_REQUIRED", "A valid API key is required."
+        )
+    elif _is_rate_limited(request) and not await request.app.state.rate_limiter.allow(
+        _rate_limit_key(request)
+    ):
+        response = _security_response(
+            429, "RATE_LIMITED", "Too many requests. Please retry later.", retry_after="60"
+        )
+    else:
+        response = await call_next(request)
     response.headers["X-Request-ID"] = request_id
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    duration = time.perf_counter() - started
+    route = request.scope.get("route")
+    metric_path = getattr(route, "path", request.url.path)
+    await request.app.state.metrics.observe(
+        request.method, metric_path, response.status_code, duration
+    )
     logger.info(
         "request_id=%s method=%s path=%s status=%s duration_ms=%.2f",
         request_id,
         request.method,
-        request.url.path,
+        metric_path,
         response.status_code,
-        (time.perf_counter() - started) * 1000,
+        duration * 1000,
     )
     return response
 
@@ -137,6 +166,24 @@ async def health(request: Request) -> dict[str, str]:
     return {"status": "ok", "service": app_settings.app_name, "version": "0.1.0"}
 
 
+@health_router.get("/ready", response_model=dict[str, object])
+async def ready(request: Request) -> JSONResponse:
+    checks = await request.app.state.fare_service.readiness()
+    is_ready = all(checks.values())
+    return JSONResponse(
+        status_code=200 if is_ready else 503,
+        content={"status": "ready" if is_ready else "not_ready", "checks": checks},
+    )
+
+
+@health_router.get("/metrics", include_in_schema=False)
+async def metrics(request: Request) -> Response:
+    return Response(
+        content=await request.app.state.metrics.render(),
+        media_type="text/plain; version=0.0.4",
+    )
+
+
 @router.post("/routes/estimate", response_model=RouteResponse)
 async def estimate_route(payload: FareEstimateRequest, request: Request) -> RouteResponse:
     service = request.app.state.fare_service
@@ -150,7 +197,7 @@ async def estimate_route(payload: FareEstimateRequest, request: Request) -> Rout
 @router.post("/risk/estimate")
 async def estimate_risk(payload: FareEstimateRequest, request: Request) -> RiskResponse:
     service = request.app.state.fare_service
-    risk = service.risk.assess(
+    risk = await service.risk.assess(
         (payload.origin.latitude, payload.origin.longitude),
         (payload.destination.latitude, payload.destination.longitude),
         payload.requested_at,
@@ -187,6 +234,45 @@ async def get_fare(
     if quote is None:
         raise DomainError("QUOTE_NOT_FOUND", "The requested fare quote does not exist.")
     return quote
+
+
+def _requires_auth(request: Request) -> bool:
+    return request.url.path.startswith("/api/v1/") or request.url.path == "/metrics"
+
+
+def _authenticated(request: Request) -> bool:
+    app_settings = request.app.state.settings
+    if not app_settings.api_auth_enabled:
+        return True
+    supplied = request.headers.get("X-API-Key", "")
+    configured = app_settings.api_key.get_secret_value() if app_settings.api_key else ""
+    return bool(supplied and configured and hmac.compare_digest(supplied, configured))
+
+
+def _is_rate_limited(request: Request) -> bool:
+    return request.url.path.startswith("/api/v1/")
+
+
+def _rate_limit_key(request: Request) -> str:
+    client_host = request.client.host if request.client else "unknown"
+    api_key = request.headers.get("X-API-Key", "")
+    return f"{client_host}:{hash(api_key)}"
+
+
+def _security_response(
+    status_code: int,
+    code: str,
+    message: str,
+    *,
+    retry_after: str | None = None,
+) -> JSONResponse:
+    response = JSONResponse(
+        status_code=status_code,
+        content={"error": {"code": code, "message": message, "details": None}},
+    )
+    if retry_after:
+        response.headers["Retry-After"] = retry_after
+    return response
 
 
 app = create_app()

@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Protocol
+from typing import Any, Protocol
 from zoneinfo import ZoneInfo
+
+import httpx
 
 from services.common.errors import DomainError
 
@@ -42,12 +45,14 @@ class RiskObservation:
 
 
 class RiskProvider(Protocol):
-    def get_observation(
+    async def get_observation(
         self,
         origin: tuple[float, float],
         destination: tuple[float, float],
         requested_at: datetime,
     ) -> RiskObservation: ...
+
+    async def health_check(self) -> bool: ...
 
 
 def classify_risk(score: Decimal) -> str:
@@ -115,7 +120,7 @@ class SimulatedRiskProvider:
         self.seed = seed
         self.model_version = model_version
 
-    def get_observation(
+    async def get_observation(
         self,
         origin: tuple[float, float],
         destination: tuple[float, float],
@@ -137,11 +142,117 @@ class SimulatedRiskProvider:
             model_version=self.model_version,
         )
 
+    async def health_check(self) -> bool:
+        return True
+
+
+class ExternalRiskProvider:
+    """HTTP adapter for an externally hosted route-risk scoring service.
+
+    The provider contract is intentionally small: POST a route observation
+    request and return ``components``, ``source_type``, ``data_sources``, and
+    ``model_version``. The response is validated again by ``RiskService``.
+    """
+
+    def __init__(
+        self,
+        endpoint: str,
+        *,
+        client: httpx.AsyncClient,
+        api_key: str | None = None,
+        timeout_seconds: float = 10.0,
+        retries: int = 2,
+    ) -> None:
+        if not endpoint.startswith(("http://", "https://")):
+            raise ValueError("risk provider URL must use HTTP or HTTPS")
+        self.endpoint = endpoint
+        self.client = client
+        self.api_key = api_key
+        self.timeout_seconds = timeout_seconds
+        self.retries = retries
+
+    async def get_observation(
+        self,
+        origin: tuple[float, float],
+        destination: tuple[float, float],
+        requested_at: datetime,
+    ) -> RiskObservation:
+        payload = {
+            "origin": {"latitude": origin[0], "longitude": origin[1]},
+            "destination": {"latitude": destination[0], "longitude": destination[1]},
+            "requested_at": requested_at.isoformat(),
+        }
+        response = await self._request(payload)
+        try:
+            components = response["components"]
+            if not isinstance(components, dict):
+                raise TypeError("components must be an object")
+            observation = RiskObservation(
+                components=RiskComponents(
+                    _decimal_or_none(components.get("accident")),
+                    _decimal_or_none(components.get("road")),
+                    _decimal_or_none(components.get("security")),
+                ),
+                source_type=str(response.get("source_type", "external")),
+                data_sources=tuple(str(item) for item in response.get("data_sources", ())),
+                model_version=str(response.get("model_version", "external-v1")),
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            raise DomainError(
+                "RISK_DATA_UNAVAILABLE", "The risk provider returned an invalid response."
+            ) from exc
+        if not observation.data_sources:
+            raise DomainError(
+                "RISK_DATA_UNAVAILABLE", "The risk provider did not identify its data source."
+            )
+        return observation
+
+    async def health_check(self) -> bool:
+        return bool(self.endpoint and self.client)
+
+    async def _request(self, payload: dict[str, Any]) -> dict[str, Any]:
+        headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
+        for attempt in range(self.retries + 1):
+            try:
+                response = await self.client.post(
+                    self.endpoint,
+                    json=payload,
+                    headers=headers,
+                    timeout=self.timeout_seconds,
+                )
+                if response.status_code >= 500 and attempt < self.retries:
+                    await asyncio.sleep(0.1 * (2**attempt))
+                    continue
+                response.raise_for_status()
+                result = response.json()
+                if not isinstance(result, dict):
+                    raise ValueError("risk response must be an object")
+                return result
+            except httpx.HTTPStatusError as exc:
+                if exc.response.status_code < 500:
+                    raise DomainError(
+                        "RISK_DATA_UNAVAILABLE", "The risk provider rejected the request."
+                    ) from exc
+                if attempt < self.retries:
+                    await asyncio.sleep(0.1 * (2**attempt))
+                    continue
+                raise DomainError(
+                    "RISK_DATA_UNAVAILABLE", "The risk provider returned a server error."
+                ) from exc
+            except (httpx.RequestError, ValueError) as exc:
+                if attempt < self.retries:
+                    await asyncio.sleep(0.1 * (2**attempt))
+                    continue
+                raise DomainError(
+                    "RISK_DATA_UNAVAILABLE", "The risk provider could not be reached."
+                ) from exc
+        raise DomainError("RISK_DATA_UNAVAILABLE", "The risk provider could not be reached.")
+
 
 class UnavailableRiskProvider:
     """Explicit failure mode used until a real risk data adapter is configured."""
 
-    def get_observation(
+    async def get_observation(
         self,
         origin: tuple[float, float],
         destination: tuple[float, float],
@@ -152,6 +263,9 @@ class UnavailableRiskProvider:
             "RISK_DATA_UNAVAILABLE",
             "No observed or externally sourced route-risk provider is configured.",
         )
+
+    async def health_check(self) -> bool:
+        return False
 
 
 class RiskService:
@@ -166,12 +280,12 @@ class RiskService:
         if sum((weights.accident, weights.road, weights.security), Decimal("0")) != Decimal("1"):
             raise ValueError("risk weights must sum to 1")
 
-    def assess(
+    async def assess(
         self, origin: tuple[float, float], destination: tuple[float, float], requested_at: datetime
     ) -> RiskEstimate:
         if requested_at.tzinfo is None:
             requested_at = requested_at.replace(tzinfo=UTC)
-        observation = self.provider.get_observation(origin, destination, requested_at)
+        observation = await self.provider.get_observation(origin, destination, requested_at)
         if observation.source_type not in RISK_SOURCE_TYPES:
             raise DomainError(
                 "RISK_DATA_UNAVAILABLE", "The risk provider returned an unknown source type."
@@ -188,3 +302,15 @@ class RiskService:
             data_sources=observation.data_sources,
             model_version=observation.model_version,
         )
+
+    async def ready(self) -> bool:
+        return await self.provider.health_check()
+
+
+def _decimal_or_none(value: object) -> Decimal | None:
+    if value is None:
+        return None
+    try:
+        return Decimal(str(value))
+    except (ArithmeticError, ValueError) as exc:
+        raise ValueError("risk component must be numeric") from exc
