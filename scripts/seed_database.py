@@ -13,6 +13,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
+from dotenv import load_dotenv
 from sqlalchemy import select
 
 from database.models import FareQuoteModel
@@ -28,6 +29,7 @@ def main() -> None:
     )
     parser.add_argument("--count", type=int, default=3)
     args = parser.parse_args()
+    load_dotenv()
     if args.count < 1 or args.count > 20:
         raise SystemExit("--count must be between 1 and 20")
     database_url = os.getenv("DATABASE_URL")
