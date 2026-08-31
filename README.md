@@ -885,7 +885,6 @@ Never commit the Neon database password or complete private connection string.
 
 ## Running the Project
 
-### Backend
 
 ```bash
 uv sync --dev
