@@ -11,6 +11,8 @@
     "test": "jest"
   },
   "dependencies": {
+    "@hugeicons/core-free-icons": "4.3.0",
+    "@hugeicons/react": "1.1.10",
     "next": "14.2.15",
     "react": "18.3.1",
     "react-dom": "18.3.1"

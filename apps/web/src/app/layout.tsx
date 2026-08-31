@@ -4,10 +4,9 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Distance / Risk — Explainable fare estimation',
-  description: 'Academic research prototype for transparent distance-risk-aware transportation pricing.',
+  description: 'See how distance, route risk, and demand shape a transportation fare estimate.',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <html lang="en"><body><SiteHeader />{children}</body></html>;
 }
-

@@ -1,20 +1,5 @@
 type Props = { origin: { latitude: number; longitude: number }; destination: { latitude: number; longitude: number } };
 
 export function RoutePreview({ origin, destination }: Props) {
-  return (
-    <div className="relative min-h-64 overflow-hidden rounded-2xl border border-slate-200 bg-[#eaf2f0] p-5">
-      <div className="absolute inset-0 opacity-50 [background-image:linear-gradient(30deg,#c9ddda_1px,transparent_1px),linear-gradient(120deg,#c9ddda_1px,transparent_1px)] [background-size:42px_42px]" />
-      <div className="relative flex min-h-52 items-center justify-center">
-        <svg viewBox="0 0 600 230" className="h-full w-full" role="img" aria-label="Route preview">
-          <path d="M 75 175 C 170 42, 280 210, 370 87 S 500 45, 540 70" fill="none" stroke="#087f8c" strokeWidth="10" strokeLinecap="round" />
-          <circle cx="75" cy="175" r="12" fill="#102a43" />
-          <circle cx="540" cy="70" r="12" fill="#d97706" />
-        </svg>
-        <div className="absolute bottom-3 left-3 rounded-lg bg-white/90 px-3 py-2 text-xs text-slate-600 shadow-sm">
-          Backend route preview · {origin.latitude.toFixed(3)}, {origin.longitude.toFixed(3)} → {destination.latitude.toFixed(3)}, {destination.longitude.toFixed(3)}
-        </div>
-      </div>
-    </div>
-  );
+  return <section className="overflow-hidden rounded-[48px] bg-violet p-3 text-paper shadow-console sm:p-5"><div className="rounded-[36px] bg-iris p-5 sm:p-7"><div className="flex items-start justify-between gap-4"><div><p className="eyebrow text-lemon">Route preview</p><h2 className="display-face mt-2 text-2xl">The line between two points.</h2></div><span className="hidden rounded-full border border-paper/25 px-3 py-1 text-xs text-paper/80 sm:inline-block">Backend route</span></div><div className="relative mt-6 h-56 overflow-hidden rounded-[28px] bg-[#eee9ff] sm:h-64"><div className="absolute inset-0 opacity-60 [background-image:linear-gradient(30deg,#d9ceff_1px,transparent_1px),linear-gradient(120deg,#d9ceff_1px,transparent_1px)] [background-size:42px_42px]" /><svg viewBox="0 0 600 230" className="relative h-full w-full" role="img" aria-label="Route preview from origin to destination"><path d="M60 180 C150 36 260 218 355 101 S480 42 545 63" fill="none" stroke="#7047eb" strokeWidth="11" strokeLinecap="round" /><path d="M60 180 C150 36 260 218 355 101 S480 42 545 63" fill="none" stroke="#cf75ff" strokeWidth="3" strokeDasharray="1 17" strokeLinecap="round" /><circle cx="60" cy="180" r="12" fill="#121217" /><circle cx="545" cy="63" r="12" fill="#ffc233" /><circle cx="60" cy="180" r="22" fill="none" stroke="#121217" strokeOpacity=".18" strokeWidth="2" /><circle cx="545" cy="63" r="22" fill="none" stroke="#5423e7" strokeOpacity=".25" strokeWidth="2" /></svg><div className="absolute bottom-4 left-4 right-4 flex flex-wrap items-center justify-between gap-2 rounded-[18px] bg-paper/95 px-4 py-3 text-xs text-slate shadow-sm"><span>{origin.latitude.toFixed(3)}, {origin.longitude.toFixed(3)}</span><span className="h-px min-w-8 flex-1 bg-ash" /><span>{destination.latitude.toFixed(3)}, {destination.longitude.toFixed(3)}</span></div></div></div></section>;
 }
-
