@@ -4,11 +4,13 @@ import os
 from logging.config import fileConfig
 
 from alembic import context
+from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
 
 from database.models import Base
 
 config = context.config
+load_dotenv()
 database_url = os.getenv("DATABASE_URL")
 if database_url:
     database_url = database_url.replace("postgresql://", "postgresql+psycopg://", 1)

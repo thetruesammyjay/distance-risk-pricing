@@ -107,7 +107,7 @@ class SqlAlchemyFareQuoteRepository:
     def _health_check_sync(self) -> bool:
         try:
             with self.factory() as session:
-                session.execute(text("SELECT 1"))
+                session.execute(text("SELECT 1 FROM fare_quotes LIMIT 1"))
             return True
         except SQLAlchemyError:
             return False

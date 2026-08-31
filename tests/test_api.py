@@ -3,8 +3,13 @@ from datetime import UTC, datetime
 from fastapi.testclient import TestClient
 
 from services.api_gateway.app.config import Settings
-from services.api_gateway.app.main import app, create_app, fare_service
+from services.api_gateway.app.dependencies import build_fare_service
+from services.api_gateway.app.main import create_app
 from services.routing_service.models import RouteResult
+
+test_settings = Settings(database_url=None)
+fare_service = build_fare_service(test_settings)
+app = create_app(test_settings, service=fare_service)
 
 
 class StubRouting:
