@@ -18,12 +18,16 @@
 - Configurable asynchronous HTTP adapters for external risk and demand providers,
   with response validation and bounded retries.
 - Deployment and load smoke scripts under `scripts/`.
+- Stage-level fare timings, bounded OSRM TTL caching with request coalescing, and fare-endpoint load smoke testing.
+- Verified Open-Meteo weather-risk and TomTom traffic-pressure provider modes with provenance labels.
+
+- Added the initial ML research pipeline: validated records, provenance-aware CSV preprocessing, leakage-safe feature engineering, respondent-grouped splitting, and classification evaluation metrics.
 
 ## Planned
 
 - PostgreSQL integration tests against a managed or containerized database.
-- Connect the external risk and demand adapters to verified, provenance-controlled
-  data sources before enabling production fare estimation.
+- Validate the external Open-Meteo and TomTom proxy signals against local observations.
+- Connect an empirically calibrated route-risk dataset before enabling production fare estimation.
 - Replace the in-process rate limiter and metrics registry with shared production
   backends when running more than one API replica.
 - Add managed log/metric alerting, API-key rotation, and deployment load thresholds.

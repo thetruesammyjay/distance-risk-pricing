@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     routing_timeout_seconds: float = Field(default=10.0, gt=0)
     routing_retries: int = Field(default=2, ge=0, le=5)
     routing_profile: str = "driving"
+    routing_cache_ttl_seconds: float = Field(default=300.0, ge=0, le=86400)
+    routing_cache_max_entries: int = Field(default=512, ge=1, le=10000)
     provider_timeout_seconds: float = Field(default=10.0, gt=0, le=60)
     provider_retries: int = Field(default=2, ge=0, le=5)
     pricing_base_fare: Decimal = Field(default=Decimal("500"), ge=0)
@@ -32,13 +34,13 @@ class Settings(BaseSettings):
     pricing_formula_mode: Literal["additive", "multiplicative"] = "additive"
     pricing_formula_version: str = "v1"
     pricing_coefficient_version: str = "prototype-v1"
-    risk_mode: Literal["simulated", "external"] = "simulated"
+    risk_mode: Literal["simulated", "open_meteo", "external"] = "simulated"
     risk_provider_url: str | None = None
     risk_provider_api_key: SecretStr | None = None
     risk_accident_weight: Decimal = Field(default=Decimal("0.4"), ge=0)
     risk_road_weight: Decimal = Field(default=Decimal("0.3"), ge=0)
     risk_security_weight: Decimal = Field(default=Decimal("0.3"), ge=0)
-    demand_mode: Literal["simulated", "external"] = "simulated"
+    demand_mode: Literal["simulated", "tomtom_traffic", "external"] = "simulated"
     demand_provider_url: str | None = None
     demand_provider_api_key: SecretStr | None = None
     demand_simulated_requests: int = Field(default=42, ge=0)
@@ -77,10 +79,12 @@ class Settings(BaseSettings):
                 raise ValueError("simulated risk or demand is disabled in production")
             if not self.api_auth_enabled:
                 raise ValueError("API authentication must be enabled in production")
-        if self.risk_mode == "external" and not self.risk_provider_url:
-            raise ValueError("RISK_PROVIDER_URL is required for external risk mode")
-        if self.demand_mode == "external" and not self.demand_provider_url:
-            raise ValueError("DEMAND_PROVIDER_URL is required for external demand mode")
+        if self.risk_mode in {"open_meteo", "external"} and not self.risk_provider_url:
+            raise ValueError("RISK_PROVIDER_URL is required for external risk modes")
+        if self.demand_mode == "tomtom_traffic" and not self.demand_provider_api_key:
+            raise ValueError("DEMAND_PROVIDER_API_KEY is required for TomTom traffic mode")
+        if self.demand_mode in {"tomtom_traffic", "external"} and not self.demand_provider_url:
+            raise ValueError("DEMAND_PROVIDER_URL is required for external demand modes")
         if self.api_auth_enabled and (
             self.api_key is None or len(self.api_key.get_secret_value()) < 32
         ):

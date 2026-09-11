@@ -1,13 +1,21 @@
 from datetime import UTC, datetime
 
 from fastapi.testclient import TestClient
+from pydantic import SecretStr
 
 from services.api_gateway.app.config import Settings
 from services.api_gateway.app.dependencies import build_fare_service
 from services.api_gateway.app.main import create_app
 from services.routing_service.models import RouteResult
 
-test_settings = Settings(database_url=None)
+test_settings = Settings(
+    database_url=None,
+    risk_mode="simulated",
+    risk_provider_url=None,
+    demand_mode="simulated",
+    demand_provider_url=None,
+    demand_provider_api_key=None,
+)
 fare_service = build_fare_service(test_settings)
 app = create_app(test_settings, service=fare_service)
 
@@ -46,7 +54,7 @@ def test_ready_and_metrics_endpoints():
 
 def test_api_key_authentication_can_be_enabled():
     secured = create_app(
-        Settings(api_auth_enabled=True, api_key="a" * 32),
+        Settings(api_auth_enabled=True, api_key=SecretStr("a" * 32)),
         service=fare_service,
     )
     client = TestClient(secured)
@@ -92,9 +100,19 @@ def test_fare_estimate_is_persisted_in_dev_repository(monkeypatch):
     assert quote["quote_id"]
     assert quote["risk"]["data_sources"] == ["simulated development scenario"]
     assert quote["demand"]["source_type"] == "simulated"
+    assert quote["demand"]["data_sources"] == ["simulated development scenario"]
+    assert set(quote["timings_ms"]) == {
+        "routing",
+        "risk",
+        "demand",
+        "pricing",
+        "database_persistence",
+    }
+    assert all(value >= 0 for value in quote["timings_ms"].values())
     retrieved = client.get(f"/api/v1/fares/{quote['quote_id']}")
     assert retrieved.status_code == 200
     assert retrieved.json()["fare"]["total"] == quote["fare"]["total"]
+    assert set(retrieved.json()["timings_ms"]) == set(quote["timings_ms"])
 
 
 def test_missing_quote_returns_not_found():

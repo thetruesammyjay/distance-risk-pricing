@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+import time
 from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import uuid4
@@ -21,6 +23,8 @@ from services.pricing_engine.models import PricingConfig, PricingContext
 from services.risk_service.service import RiskService
 from services.routing_service.models import Coordinates, RouteResult
 from services.routing_service.service import RoutingService
+
+logger = logging.getLogger(__name__)
 
 
 class FareEstimationService:
@@ -46,13 +50,29 @@ class FareEstimationService:
     async def estimate(self, request: FareEstimateRequest) -> FareEstimateResponse:
         origin = Coordinates(request.origin.latitude, request.origin.longitude)
         destination = Coordinates(request.destination.latitude, request.destination.longitude)
+        timings_ms: dict[str, float] = {}
+
+        started = time.perf_counter()
         route = await self.routing.estimate(origin, destination)
+        timings_ms["routing"] = _elapsed_ms(started)
+
+        started = time.perf_counter()
         risk = await self.risk.assess(
             (origin.latitude, origin.longitude),
             (destination.latitude, destination.longitude),
             request.requested_at,
         )
-        demand = await self.demand.estimate()
+        timings_ms["risk"] = _elapsed_ms(started)
+
+        started = time.perf_counter()
+        demand = await self.demand.estimate(
+            (origin.latitude, origin.longitude),
+            (destination.latitude, destination.longitude),
+            request.requested_at,
+        )
+        timings_ms["demand"] = _elapsed_ms(started)
+
+        started = time.perf_counter()
         pricing_config = PricingConfig(
             base_fare=self.settings.pricing_base_fare,
             distance_rate=self.settings.pricing_distance_rate,
@@ -71,6 +91,8 @@ class FareEstimationService:
             ),
             pricing_config,
         )
+        timings_ms["pricing"] = _elapsed_ms(started)
+
         created_at = datetime.now(UTC)
         response = FareEstimateResponse(
             quote_id=str(uuid4()),
@@ -108,6 +130,7 @@ class FareEstimationService:
                 available_drivers=demand.available_drivers,
                 multiplier=float(demand.multiplier),
                 source_type=demand.source_type,
+                data_sources=list(demand.data_sources),
             ),
             fare=FareResponse(
                 currency=fare.currency,
@@ -120,8 +143,14 @@ class FareEstimationService:
                 formula_version=fare.formula_version,
                 coefficient_version=fare.coefficient_version,
             ),
+            timings_ms={**timings_ms, "database_persistence": 0.0},
         )
+
+        started = time.perf_counter()
         await self.repository.save(response.model_dump(mode="json"))
+        timings_ms["database_persistence"] = _elapsed_ms(started)
+        response.timings_ms = timings_ms
+        logger.info("quote_id=%s stage_timings_ms=%s", response.quote_id, timings_ms)
         return response
 
     async def readiness(self) -> dict[str, bool]:
@@ -141,6 +170,10 @@ def route_response(route: RouteResult) -> RouteResponse:
         geometry=route.geometry,
         provider=route.provider,
     )
+
+
+def _elapsed_ms(started: float) -> float:
+    return round((time.perf_counter() - started) * 1000, 2)
 
 
 async def _check_async(target: object, method_name: str) -> bool:

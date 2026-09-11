@@ -71,6 +71,7 @@ class DemandResponse(BaseModel):
     available_drivers: int
     multiplier: float
     source_type: str
+    data_sources: list[str] = Field(default_factory=list)
 
 
 class FareResponse(BaseModel):
@@ -95,6 +96,7 @@ class FareEstimateResponse(BaseModel):
     risk: RiskResponse
     demand: DemandResponse
     fare: FareResponse
+    timings_ms: dict[str, float] = Field(default_factory=dict)
 
 
 class ErrorBody(BaseModel):

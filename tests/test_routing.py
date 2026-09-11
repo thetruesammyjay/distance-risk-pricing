@@ -87,3 +87,26 @@ async def test_osrm_retries_transient_server_failure():
     )
     assert route.distance_km == 12.8
     assert client.calls == 2
+
+
+@pytest.mark.asyncio
+async def test_osrm_cache_reuses_repeated_route():
+    class CountingClient(FakeClient):
+        def __init__(self):
+            self.calls = 0
+
+        async def get(self, *_args, **_kwargs):
+            self.calls += 1
+            return FakeResponse()
+
+    client = CountingClient()
+    adapter = OSRMAdapter(
+        "https://router.example", client=client, cache_ttl_seconds=60, cache_max_entries=2
+    )
+    origin = Coordinates(1, 2)
+    destination = Coordinates(3, 4)
+    first = await adapter.get_route(origin, destination)
+    second = await adapter.get_route(origin, destination)
+
+    assert first == second
+    assert client.calls == 1

@@ -27,7 +27,7 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["database*", "services*", "packages*"]
+include = ["database*", "services*", "packages*", "ml*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "services", "ml/tests"]

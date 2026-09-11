@@ -10,10 +10,12 @@ from services.demand_service.service import (
     DemandService,
     ExternalDemandProvider,
     SimulatedDemandProvider,
+    TomTomTrafficDemandProvider,
     UnavailableDemandProvider,
 )
 from services.risk_service.service import (
     ExternalRiskProvider,
+    OpenMeteoRiskProvider,
     RiskComponents,
     RiskService,
     SimulatedRiskProvider,
@@ -36,10 +38,19 @@ def build_fare_service(settings: Settings) -> FareEstimationService:
             retries=settings.routing_retries,
             profile=settings.routing_profile,
             client=client,
+            cache_ttl_seconds=settings.routing_cache_ttl_seconds,
+            cache_max_entries=settings.routing_cache_max_entries,
         )
     )
     if settings.risk_mode == "simulated":
         risk_provider = SimulatedRiskProvider(settings.simulation_seed)
+    elif settings.risk_mode == "open_meteo" and settings.risk_provider_url:
+        risk_provider = OpenMeteoRiskProvider(
+            settings.risk_provider_url,
+            client=client,
+            timeout_seconds=settings.provider_timeout_seconds,
+            retries=settings.provider_retries,
+        )
     elif settings.risk_provider_url:
         risk_provider = ExternalRiskProvider(
             settings.risk_provider_url,
@@ -65,6 +76,18 @@ def build_fare_service(settings: Settings) -> FareEstimationService:
     if settings.demand_mode == "simulated":
         demand_provider = SimulatedDemandProvider(
             settings.demand_simulated_requests, settings.demand_simulated_drivers
+        )
+    elif settings.demand_mode == "tomtom_traffic" and settings.demand_provider_url:
+        demand_provider = TomTomTrafficDemandProvider(
+            settings.demand_provider_url,
+            client=client,
+            api_key=(
+                settings.demand_provider_api_key.get_secret_value()
+                if settings.demand_provider_api_key
+                else None
+            ),
+            timeout_seconds=settings.provider_timeout_seconds,
+            retries=settings.provider_retries,
         )
     elif settings.demand_provider_url:
         demand_provider = ExternalDemandProvider(

@@ -34,3 +34,4 @@ data/external/*
 ml/models/*.pkl
 ml/models/*.joblib
 !.github/workflows/
+*.tsbuildinfo

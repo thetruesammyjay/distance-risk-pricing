@@ -37,6 +37,7 @@ export type FareQuote = {
     available_drivers: number;
     multiplier: number;
     source_type: string;
+    data_sources: string[];
   };
   fare: {
     currency: string;
@@ -49,6 +50,7 @@ export type FareQuote = {
     formula_version: string;
     coefficient_version: string;
   };
+  timings_ms: Record<string, number>;
 };
 
 export type ApiError = { error: { code: string; message: string; details?: unknown } };
