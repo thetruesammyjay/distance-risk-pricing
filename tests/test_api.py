@@ -12,7 +12,7 @@ test_settings = Settings(
     database_url=None,
     risk_mode="simulated",
     risk_provider_url=None,
-    demand_mode="simulated",
+    demand_mode="time_of_day",
     demand_provider_url=None,
     demand_provider_api_key=None,
 )
@@ -110,7 +110,7 @@ def test_fare_estimate_is_persisted_in_dev_repository(monkeypatch):
     assert quote["quote_id"]
     assert quote["risk"]["data_sources"] == ["simulated development scenario"]
     assert quote["demand"]["source_type"] == "simulated"
-    assert quote["demand"]["data_sources"] == ["simulated development scenario"]
+    assert quote["demand"]["data_sources"][0] == "time-of-day demand simulation"
     assert set(quote["timings_ms"]) == {
         "routing",
         "risk",

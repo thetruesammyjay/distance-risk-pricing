@@ -501,7 +501,10 @@ w1 + w2 + w3 = 1
 
 ## Demand Model
 
-The proposed demand multiplier is:
+The proposed demand multiplier is the generic form below. In this prototype,
+the request-to-driver pressure ratio is generated from a deterministic
+time-of-day scenario in `Africa/Lagos`, because real ride-request and
+driver-availability data are not available for this academic study.
 
 ```text
 M = min(1 + λ × (Req / Sup - 1), M_cap)
@@ -522,6 +525,22 @@ if Req / Sup <= 1:
 ```
 
 The demand multiplier cap prevents excessive fare escalation.
+
+The implemented time-of-day pressure factors are:
+
+| Period | Scenario | Pressure factor |
+|---|---|---:|
+| 07:00–09:00 | Morning peak | 1.50 |
+| 12:00–13:00 | Midday activity | 1.20 |
+| 15:00–16:00 | Afternoon slight peak | 1.10 |
+| 18:00–21:00 | Evening medium peak | 1.30 |
+| Shoulder periods | Small transition effect | 1.05–1.10 |
+| Other times | Off-peak baseline | 0.85 |
+
+The synthetic request count is generated from a 100-request/100-driver
+baseline. The multiplier remains floored at `1.0`, so off-peak periods do not
+create discounts. These values are scenario inputs for reproducible academic
+experiments, not observed traffic or real-world pricing recommendations.
 
 ---
 
@@ -834,6 +853,9 @@ DATABASE_URL=postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=require
 FRONTEND_URL=http://localhost:3000
 
 ROUTING_BASE_URL=https://router.project-osrm.org
+
+DEMAND_MODE=time_of_day
+DEMAND_TIMEZONE=Africa/Lagos
 
 PRICING_BASE_FARE=500
 PRICING_DISTANCE_RATE=150

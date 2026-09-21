@@ -34,13 +34,15 @@ services:
       - key: RISK_PROVIDER_API_KEY
         sync: false
       - key: DEMAND_MODE
-        value: external
-      - key: DEMAND_PROVIDER_URL
-        sync: false
-      - key: DEMAND_PROVIDER_API_KEY
-        sync: false
+        value: time_of_day
+      - key: DEMAND_TIMEZONE
+        value: Africa/Lagos
+      - key: DEMAND_SIMULATED_REQUESTS
+        value: "100"
+      - key: DEMAND_SIMULATED_DRIVERS
+        value: "100"
       - key: ALLOW_SIMULATED_DATA
-        value: "false"
+        value: "true"
       - key: API_AUTH_ENABLED
         value: "true"
       - key: API_KEY

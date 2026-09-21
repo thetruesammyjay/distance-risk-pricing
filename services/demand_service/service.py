@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime
-from decimal import Decimal
+from datetime import UTC, datetime
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any, Protocol
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import httpx
 
@@ -20,6 +21,37 @@ class DemandEstimate:
     multiplier: Decimal
     source_type: str
     data_sources: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class TimeOfDayDemandProfile:
+    label: str
+    pressure: Decimal
+
+
+def time_of_day_demand_profile(local_timestamp: datetime) -> TimeOfDayDemandProfile:
+    """Return a transparent academic demand-pressure profile for local time."""
+
+    minute = local_timestamp.hour * 60 + local_timestamp.minute
+    if 7 * 60 <= minute < 9 * 60:
+        return TimeOfDayDemandProfile("morning peak", Decimal("1.50"))
+    if 12 * 60 <= minute < 13 * 60:
+        return TimeOfDayDemandProfile("midday activity", Decimal("1.20"))
+    if 15 * 60 <= minute < 16 * 60:
+        return TimeOfDayDemandProfile("afternoon slight peak", Decimal("1.10"))
+    if 18 * 60 <= minute < 21 * 60:
+        return TimeOfDayDemandProfile("evening medium peak", Decimal("1.30"))
+
+    # Shoulders add small transitions around the main windows without making
+    # the academic scenario look like a set of unrealistic step changes.
+    if 6 * 60 <= minute < 7 * 60 or 9 * 60 <= minute < 10 * 60:
+        return TimeOfDayDemandProfile("morning shoulder", Decimal("1.10"))
+    if 11 * 60 <= minute < 12 * 60 or 13 * 60 <= minute < 14 * 60:
+        return TimeOfDayDemandProfile("midday shoulder", Decimal("1.05"))
+    if 16 * 60 <= minute < 18 * 60 or 21 * 60 <= minute < 22 * 60:
+        return TimeOfDayDemandProfile("evening shoulder", Decimal("1.10"))
+
+    return TimeOfDayDemandProfile("off-peak baseline", Decimal("0.85"))
 
 
 class DemandProvider(Protocol):
@@ -70,6 +102,61 @@ class SimulatedDemandProvider:
             multiplier=Decimal("1"),
             source_type="simulated",
             data_sources=("simulated development scenario",),
+        )
+
+    async def health_check(self) -> bool:
+        return True
+
+
+class TimeOfDayDemandProvider:
+    """Deterministic demand scenario based on local time, not live traffic."""
+
+    def __init__(
+        self,
+        baseline_requests: int = 100,
+        baseline_available_drivers: int = 100,
+        timezone_name: str = "Africa/Lagos",
+    ) -> None:
+        if baseline_requests < 0 or baseline_available_drivers <= 0:
+            raise ValueError("time-of-day demand baseline counts are invalid")
+        try:
+            timezone = ZoneInfo(timezone_name)
+        except ZoneInfoNotFoundError as exc:
+            raise ValueError(f"unknown demand timezone: {timezone_name}") from exc
+        self.baseline_requests = baseline_requests
+        self.baseline_available_drivers = baseline_available_drivers
+        self.timezone_name = timezone_name
+        self.timezone = timezone
+
+    async def get_snapshot(
+        self,
+        origin: tuple[float, float] | None = None,
+        destination: tuple[float, float] | None = None,
+        requested_at: datetime | None = None,
+    ) -> DemandEstimate:
+        del origin, destination
+        timestamp = requested_at or datetime.now(UTC)
+        if timestamp.tzinfo is None or timestamp.utcoffset() is None:
+            raise DomainError(
+                "INVALID_REQUESTED_AT", "Time-of-day demand requires a timezone-aware timestamp."
+            )
+        local_timestamp = timestamp.astimezone(self.timezone)
+        profile = time_of_day_demand_profile(local_timestamp)
+        baseline_ratio = Decimal(self.baseline_requests) / Decimal(self.baseline_available_drivers)
+        requests = int(
+            (Decimal(self.baseline_available_drivers) * baseline_ratio * profile.pressure)
+            .to_integral_value(rounding=ROUND_HALF_UP)
+        )
+        return DemandEstimate(
+            requests=requests,
+            available_drivers=self.baseline_available_drivers,
+            multiplier=Decimal("1"),
+            source_type="simulated",
+            data_sources=(
+                "time-of-day demand simulation",
+                f"{profile.label} ({self.timezone_name})",
+                f"academic scenario pressure factor={profile.pressure}",
+            ),
         )
 
     async def health_check(self) -> bool:
@@ -137,89 +224,6 @@ class ExternalDemandProvider:
 
     async def health_check(self) -> bool:
         return bool(self.endpoint and self.client)
-
-
-class TomTomTrafficDemandProvider:
-    """Use TomTom observed/free-flow speeds as a demand-pressure proxy.
-
-    TomTom does not provide ride-request or available-driver counts here. We
-    normalize the speed ratio to a fixed index so the pricing engine can consume
-    it, and expose the transformation in data_sources.
-    """
-
-    def __init__(
-        self,
-        endpoint: str,
-        *,
-        client: httpx.AsyncClient,
-        api_key: str | None,
-        timeout_seconds: float = 10.0,
-        retries: int = 2,
-    ) -> None:
-        if not endpoint.startswith(("http://", "https://")):
-            raise ValueError("TomTom traffic URL must use HTTP or HTTPS")
-        if not api_key:
-            raise ValueError("TomTom traffic API key is required")
-        self.endpoint = endpoint
-        self.client = client
-        self.api_key = api_key
-        self.timeout_seconds = timeout_seconds
-        self.retries = retries
-
-    async def get_snapshot(
-        self,
-        origin: tuple[float, float] | None = None,
-        destination: tuple[float, float] | None = None,
-        requested_at: datetime | None = None,
-    ) -> DemandEstimate:
-        del requested_at
-        if origin is None or destination is None:
-            raise DomainError(
-                "DEMAND_DATA_UNAVAILABLE", "Traffic demand requires a route location."
-            )
-        latitude = (origin[0] + destination[0]) / 2
-        longitude = (origin[1] + destination[1]) / 2
-        params = {
-            "key": self.api_key,
-            "point": f"{latitude},{longitude}",
-            "unit": "KMPH",
-        }
-        for attempt in range(self.retries + 1):
-            try:
-                response = await self.client.get(
-                    self.endpoint, params=params, timeout=self.timeout_seconds
-                )
-                if response.status_code >= 500 and attempt < self.retries:
-                    await response.aclose()
-                    await asyncio.sleep(0.1 * (2**attempt))
-                    continue
-                response.raise_for_status()
-                payload = response.json()
-                if not isinstance(payload, dict):
-                    raise ValueError("TomTom traffic response must be an object")
-                return _parse_tomtom_response(payload)
-            except httpx.HTTPStatusError as exc:
-                if exc.response.status_code < 500:
-                    raise DomainError(
-                        "DEMAND_DATA_UNAVAILABLE", "TomTom rejected the traffic request."
-                    ) from exc
-                if attempt < self.retries:
-                    await asyncio.sleep(0.1 * (2**attempt))
-                    continue
-                raise DomainError(
-                    "DEMAND_DATA_UNAVAILABLE", "TomTom returned a traffic server error."
-                ) from exc
-            except (httpx.RequestError, ValueError, TypeError, KeyError) as exc:
-                if attempt < self.retries:
-                    await asyncio.sleep(0.1 * (2**attempt))
-                    continue
-                raise DomainError(
-                    "DEMAND_DATA_UNAVAILABLE", "TomTom traffic data could not be reached."
-                ) from exc
-        raise DomainError("DEMAND_DATA_UNAVAILABLE", "TomTom traffic data could not be reached.")
-
-    async def health_check(self) -> bool:
-        return bool(self.endpoint and self.api_key and self.client)
 
 
 class UnavailableDemandProvider:
@@ -296,24 +300,3 @@ def _parse_demand_response(payload: dict[str, Any]) -> DemandEstimate:
         )
     except (KeyError, TypeError, ValueError) as exc:
         raise ValueError("demand response is invalid") from exc
-
-
-def _parse_tomtom_response(payload: dict[str, Any]) -> DemandEstimate:
-    flow = payload.get("flowSegmentData")
-    if not isinstance(flow, dict):
-        raise ValueError("TomTom response is missing flowSegmentData")
-    current_speed = float(flow["currentSpeed"])
-    free_flow_speed = float(flow["freeFlowSpeed"])
-    if current_speed <= 0 or free_flow_speed <= 0:
-        raise ValueError("TomTom speeds must be positive")
-    pressure = max(1.0, min(free_flow_speed / current_speed, 2.5))
-    return DemandEstimate(
-        requests=round(pressure * 100),
-        available_drivers=100,
-        multiplier=Decimal("1"),
-        source_type="external",
-        data_sources=(
-            "TomTom Traffic Flow API observed speed",
-            "demand-pressure proxy = free-flow speed / current speed",
-        ),
-    )

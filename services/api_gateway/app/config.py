@@ -43,11 +43,12 @@ class Settings(BaseSettings):
     risk_accident_weight: Decimal = Field(default=Decimal("0.4"), ge=0)
     risk_road_weight: Decimal = Field(default=Decimal("0.3"), ge=0)
     risk_security_weight: Decimal = Field(default=Decimal("0.3"), ge=0)
-    demand_mode: Literal["simulated", "tomtom_traffic", "external"] = "simulated"
+    demand_mode: Literal["simulated", "time_of_day", "external"] = "time_of_day"
     demand_provider_url: str | None = None
     demand_provider_api_key: SecretStr | None = None
-    demand_simulated_requests: int = Field(default=42, ge=0)
-    demand_simulated_drivers: int = Field(default=28, ge=0)
+    demand_simulated_requests: int = Field(default=100, ge=0)
+    demand_simulated_drivers: int = Field(default=100, ge=1)
+    demand_timezone: str = "Africa/Lagos"
     allow_simulated_data: bool = False
     simulation_seed: int = 42
     log_level: str = "INFO"
@@ -77,16 +78,15 @@ class Settings(BaseSettings):
             if not self.database_url:
                 raise ValueError("DATABASE_URL is required in production")
             if not self.allow_simulated_data and (
-                self.risk_mode == "simulated" or self.demand_mode == "simulated"
+                self.risk_mode == "simulated"
+                or self.demand_mode in {"simulated", "time_of_day"}
             ):
                 raise ValueError("simulated risk or demand is disabled in production")
             if not self.api_auth_enabled:
                 raise ValueError("API authentication must be enabled in production")
         if self.risk_mode in {"open_meteo", "external"} and not self.risk_provider_url:
             raise ValueError("RISK_PROVIDER_URL is required for external risk modes")
-        if self.demand_mode == "tomtom_traffic" and not self.demand_provider_api_key:
-            raise ValueError("DEMAND_PROVIDER_API_KEY is required for TomTom traffic mode")
-        if self.demand_mode in {"tomtom_traffic", "external"} and not self.demand_provider_url:
+        if self.demand_mode == "external" and not self.demand_provider_url:
             raise ValueError("DEMAND_PROVIDER_URL is required for external demand modes")
         if self.api_auth_enabled and (
             self.api_key is None or len(self.api_key.get_secret_value()) < 32

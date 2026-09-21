@@ -4,7 +4,7 @@ from decimal import Decimal
 import httpx
 import pytest
 
-from services.demand_service.service import ExternalDemandProvider, TomTomTrafficDemandProvider
+from services.demand_service.service import ExternalDemandProvider
 from services.risk_service.service import ExternalRiskProvider, OpenMeteoRiskProvider
 
 
@@ -76,26 +76,3 @@ async def test_open_meteo_provider_derives_external_road_signal():
     assert observation.components.accident is None
     assert observation.components.road is not None
     assert observation.data_sources == ("Open-Meteo forecast API weather signal",)
-
-
-@pytest.mark.asyncio
-async def test_tomtom_provider_maps_traffic_pressure_proxy():
-    def handler(request: httpx.Request) -> httpx.Response:
-        assert request.url.params["key"] == "traffic-key"
-        assert request.url.params["point"] == "5.35,7.05"
-        return httpx.Response(
-            200,
-            json={"flowSegmentData": {"currentSpeed": 40, "freeFlowSpeed": 80}},
-        )
-
-    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
-        provider = TomTomTrafficDemandProvider(
-            "https://api.tomtom.test/traffic/services/4/flowSegmentData/absolute/10/json",
-            client=client,
-            api_key="traffic-key",
-        )
-        snapshot = await provider.get_snapshot((5.3, 7.0), (5.4, 7.1))
-    assert snapshot.source_type == "external"
-    assert snapshot.requests == 200
-    assert snapshot.available_drivers == 100
-    assert "demand-pressure proxy" in snapshot.data_sources[1]

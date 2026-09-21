@@ -10,7 +10,7 @@ from services.demand_service.service import (
     DemandService,
     ExternalDemandProvider,
     SimulatedDemandProvider,
-    TomTomTrafficDemandProvider,
+    TimeOfDayDemandProvider,
     UnavailableDemandProvider,
 )
 from services.risk_service.service import (
@@ -77,17 +77,11 @@ def build_fare_service(settings: Settings) -> FareEstimationService:
         demand_provider = SimulatedDemandProvider(
             settings.demand_simulated_requests, settings.demand_simulated_drivers
         )
-    elif settings.demand_mode == "tomtom_traffic" and settings.demand_provider_url:
-        demand_provider = TomTomTrafficDemandProvider(
-            settings.demand_provider_url,
-            client=client,
-            api_key=(
-                settings.demand_provider_api_key.get_secret_value()
-                if settings.demand_provider_api_key
-                else None
-            ),
-            timeout_seconds=settings.provider_timeout_seconds,
-            retries=settings.provider_retries,
+    elif settings.demand_mode == "time_of_day":
+        demand_provider = TimeOfDayDemandProvider(
+            baseline_requests=settings.demand_simulated_requests,
+            baseline_available_drivers=settings.demand_simulated_drivers,
+            timezone_name=settings.demand_timezone,
         )
     elif settings.demand_provider_url:
         demand_provider = ExternalDemandProvider(
