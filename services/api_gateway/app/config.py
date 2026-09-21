@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     database_max_overflow: int = Field(default=10, ge=0, le=100)
     database_pool_timeout_seconds: int = Field(default=30, ge=1, le=120)
     frontend_url: str = "http://localhost:3000"
+    location_catalog_path: str = (
+        "data/FUTO Route Endpoint Coordinate Collection.csv"
+    )
     routing_base_url: str = "https://router.project-osrm.org"
     routing_timeout_seconds: float = Field(default=10.0, gt=0)
     routing_retries: int = Field(default=2, ge=0, le=5)

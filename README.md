@@ -667,12 +667,12 @@ Example request:
 ```json
 {
   "origin": {
-    "latitude": 5.3921,
-    "longitude": 7.0337
+    "latitude": 5.4005546,
+    "longitude": 6.9841672
   },
   "destination": {
-    "latitude": 5.4865,
-    "longitude": 7.0259
+    "latitude": 5.395214,
+    "longitude": 7.009140
   },
   "requested_at": "2026-08-23T18:30:00"
 }
@@ -854,8 +854,12 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 For production:
 
 ```env
-NEXT_PUBLIC_API_URL=<RENDER_BACKEND_URL>
+# Leave NEXT_PUBLIC_API_URL unset.
+API_SERVER_URL=<RENDER_BACKEND_URL>
+INTERNAL_API_KEY=<same-secret-as-render-API_KEY>
 ```
+
+The production frontend uses the Next.js server-side proxy at `/api/backend`, so the Render URL and API key are not exposed to the browser.
 
 ---
 
@@ -951,13 +955,14 @@ flowchart TD
 
 ### Frontend Deployment — Vercel
 
-Configure the frontend root directory as `apps/web`. Set:
+Use the repository root as the Vercel project root; the root `vercel.json` builds the Next.js app in `apps/web`. Set these server-side environment variables:
 
 ```env
-NEXT_PUBLIC_API_URL=<RENDER_BACKEND_URL>
+API_SERVER_URL=<RENDER_BACKEND_URL>
+INTERNAL_API_KEY=<same-secret-as-render-API_KEY>
 ```
 
-The production frontend must communicate with the backend over HTTPS.
+Leave `NEXT_PUBLIC_API_URL` unset in production so requests use the proxy. The production frontend and Render backend must communicate over HTTPS.
 
 ### Backend Deployment — Render
 
@@ -968,6 +973,8 @@ uv run uvicorn services.api_gateway.app.main:app --host 0.0.0.0 --port $PORT
 ```
 
 Production environment variables should include `DATABASE_URL`, `FRONTEND_URL`, `ROUTING_BASE_URL`, pricing configuration, and other required service credentials. Secrets must be configured through Render's environment management rather than committed to Git.
+
+The Render Blueprint also sets `LOCATION_CATALOG_PATH` to `data/FUTO Route Endpoint Coordinate Collection.csv`. Keep that CSV committed to the repository so the deployed API can load the real FUTO locations.
 
 ### Database Deployment — Neon
 

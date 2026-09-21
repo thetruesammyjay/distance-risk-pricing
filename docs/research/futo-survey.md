@@ -40,6 +40,22 @@ long-format file to `data/interim/`, which is intentionally excluded from Git.
 Use `--allow-invalid` only when inspecting a partially valid export; strict mode
 is the default for training preparation.
 
-No model has been trained and no accuracy or research conclusion should be
-reported until the prepared data, route metadata, target definition, grouped
-validation design, and provenance have been reviewed.
+A baseline comparison has now been run using the prepared labels and grouped
+validation. Its report is exploratory and must not be treated as evidence of
+real-world danger prediction. Physical route features remain pending the route
+catalog described below.
+## Baseline experiment
+
+The first comparison evaluates route-only, time-band-only, and combined
+route/time features with a majority baseline plus unbalanced and class-balanced
+logistic regression, constrained decision tree, and constrained random forest
+variants. Validation is respondent-grouped and stratified across five folds.
+Each fold records a confusion matrix and per-class recall. The generated report
+is local and ignored by Git:
+
+`data/processed/futo_model_comparison.json`
+
+These results are exploratory only. The survey target represents perceived route
+risk, and the export does not yet contain route coordinates, distances, or
+travel durations. No model from this experiment is connected to production fare
+estimation.

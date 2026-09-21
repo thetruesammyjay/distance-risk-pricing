@@ -3,6 +3,15 @@ export type Coordinate = {
   longitude: number;
 };
 
+export type LocationOption = Coordinate & {
+  location_id: string;
+  endpoint_name: string;
+  collected_at: string;
+  source: string;
+  source_url: string;
+  notes: string;
+};
+
 export type FareRequest = {
   origin: Coordinate;
   destination: Coordinate;

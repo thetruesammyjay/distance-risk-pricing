@@ -9,10 +9,24 @@ services:
     envVars:
       - key: APP_ENV
         value: production
+      - key: DEBUG
+        value: "false"
       - key: DATABASE_URL
         sync: false
       - key: FRONTEND_URL
         sync: false
+      - key: LOCATION_CATALOG_PATH
+        value: "data/FUTO Route Endpoint Coordinate Collection.csv"
+      - key: ROUTING_BASE_URL
+        value: https://router.project-osrm.org
+      - key: ROUTING_TIMEOUT_SECONDS
+        value: "10"
+      - key: ROUTING_RETRIES
+        value: "2"
+      - key: PROVIDER_TIMEOUT_SECONDS
+        value: "10"
+      - key: PROVIDER_RETRIES
+        value: "2"
       - key: RISK_MODE
         value: external
       - key: RISK_PROVIDER_URL
@@ -35,7 +49,7 @@ services:
         value: "120"
       - key: RATE_LIMIT_WINDOW_SECONDS
         value: "60"
-      - key: ROUTING_BASE_URL
-        value: https://router.project-osrm.org
       - key: PRICING_FORMULA_MODE
         value: additive
+      - key: PRICING_FORMULA_VERSION
+        value: v1

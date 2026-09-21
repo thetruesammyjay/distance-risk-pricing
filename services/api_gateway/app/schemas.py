@@ -48,6 +48,17 @@ class RouteResponse(BaseModel):
     provider: str
 
 
+class LocationResponse(BaseModel):
+    location_id: str
+    endpoint_name: str
+    latitude: float
+    longitude: float
+    collected_at: str
+    source: str
+    source_url: str
+    notes: str
+
+
 class RiskComponentsResponse(BaseModel):
     accident: float | None
     road: float | None

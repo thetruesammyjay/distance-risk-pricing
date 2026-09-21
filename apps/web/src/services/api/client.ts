@@ -1,4 +1,4 @@
-import type { ApiError, FareQuote, FareRequest } from '@/types/api';
+import type { ApiError, FareQuote, FareRequest, LocationOption } from '@/types/api';
 
 function endpoint(path: string) {
   if (typeof window === 'undefined') {
@@ -18,6 +18,15 @@ export async function estimateFare(request: FareRequest): Promise<FareQuote> {
   const payload = (await response.json()) as FareQuote | ApiError;
   if (!response.ok || 'error' in payload) {
     throw new Error('error' in payload ? payload.error.message : 'The fare could not be estimated.');
+  }
+  return payload;
+}
+
+export async function getLocations(): Promise<LocationOption[]> {
+  const response = await fetch(endpoint('/api/v1/locations'), { cache: 'no-store' });
+  const payload = (await response.json()) as LocationOption[] | ApiError;
+  if (!response.ok || 'error' in payload) {
+    throw new Error('error' in payload ? payload.error.message : 'The FUTO locations could not be loaded.');
   }
   return payload;
 }

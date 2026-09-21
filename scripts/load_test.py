@@ -11,6 +11,8 @@ from datetime import UTC, datetime
 import httpx
 from dotenv import load_dotenv
 
+from services.routing_service.locations import LocationCatalog
+
 
 async def main() -> None:
     load_dotenv()
@@ -19,9 +21,18 @@ async def main() -> None:
     concurrency = max(1, int(os.getenv("CONCURRENCY", "5")))
     api_key = os.getenv("API_KEY")
     headers = {"X-API-Key": api_key} if api_key else {}
+    catalog = LocationCatalog.from_csv()
+    origin = catalog.find_by_endpoint("FUTO Main Gate")
+    destination = catalog.find_by_endpoint("FUTO Back Gate")
     payload = {
-        "origin": {"latitude": 5.3921, "longitude": 7.0337},
-        "destination": {"latitude": 5.4865, "longitude": 7.0259},
+        "origin": {
+            "latitude": origin.coordinates.latitude,
+            "longitude": origin.coordinates.longitude,
+        },
+        "destination": {
+            "latitude": destination.coordinates.latitude,
+            "longitude": destination.coordinates.longitude,
+        },
         "requested_at": datetime.now(UTC).isoformat(),
     }
     semaphore = asyncio.Semaphore(concurrency)

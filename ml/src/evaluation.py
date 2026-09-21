@@ -11,12 +11,14 @@ class ClassificationMetrics:
     macro_recall: float
     macro_f1: float
     support: int
+    per_class_recall: dict[str, float]
+    confusion_matrix: dict[str, dict[str, int]]
 
 
 def evaluate_classification(
     actual: Sequence[str], predicted: Sequence[str], *, labels: Sequence[str] | None = None
 ) -> ClassificationMetrics:
-    """Calculate metrics from real predictions without depending on a library."""
+    """Calculate class-balanced metrics and a labelled confusion matrix."""
 
     if not actual or len(actual) != len(predicted):
         raise ValueError("actual and predicted must have the same non-empty length")
@@ -28,6 +30,14 @@ def evaluate_classification(
     precisions: list[float] = []
     recalls: list[float] = []
     f1_scores: list[float] = []
+    per_class_recall: dict[str, float] = {}
+    matrix = {
+        actual_label: {predicted_label: 0 for predicted_label in classes}
+        for actual_label in classes
+    }
+    for left, right in pairs:
+        if left in matrix and right in matrix[left]:
+            matrix[left][right] += 1
     for label in classes:
         true_positive = sum(left == label and right == label for left, right in pairs)
         false_positive = sum(left != label and right == label for left, right in pairs)
@@ -37,12 +47,15 @@ def evaluate_classification(
         precisions.append(precision)
         recalls.append(recall)
         f1_scores.append(_ratio(2 * precision * recall, precision + recall))
+        per_class_recall[label] = recall
     return ClassificationMetrics(
         accuracy=accuracy,
         macro_precision=sum(precisions) / len(classes),
         macro_recall=sum(recalls) / len(classes),
         macro_f1=sum(f1_scores) / len(classes),
         support=len(actual),
+        per_class_recall=per_class_recall,
+        confusion_matrix=matrix,
     )
 
 

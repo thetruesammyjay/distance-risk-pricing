@@ -10,8 +10,8 @@ research data source is selected.
 
 ```json
 {
-  "origin": {"latitude": 5.3921, "longitude": 7.0337},
-  "destination": {"latitude": 5.4865, "longitude": 7.0259},
+  "origin": {"latitude": 5.4005546, "longitude": 6.9841672},
+  "destination": {"latitude": 5.395214, "longitude": 7.009140},
   "requested_at": "2026-08-23T18:30:00+01:00"
 }
 ```

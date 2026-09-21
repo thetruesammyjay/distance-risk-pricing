@@ -18,6 +18,7 @@ from sqlalchemy import select
 
 from database.models import FareQuoteModel
 from database.session import create_session_factory
+from services.routing_service.locations import LocationCatalog
 
 
 def main() -> None:
@@ -57,8 +58,17 @@ def main() -> None:
 def _demo_quote(index: int) -> FareQuoteModel:
     now = datetime.now(UTC) - timedelta(minutes=index)
     quote_id = str(uuid4())
-    origin = {"latitude": 5.3921, "longitude": 7.0337}
-    destination = {"latitude": 5.4865, "longitude": 7.0259}
+    catalog = LocationCatalog.from_csv()
+    origin_location = catalog.find_by_endpoint("FUTO Main Gate")
+    destination_location = catalog.find_by_endpoint("FUTO Back Gate")
+    origin = {
+        "latitude": origin_location.coordinates.latitude,
+        "longitude": origin_location.coordinates.longitude,
+    }
+    destination = {
+        "latitude": destination_location.coordinates.latitude,
+        "longitude": destination_location.coordinates.longitude,
+    }
     risk_score = Decimal("0.5800")
     payload = {
         "quote_id": quote_id,

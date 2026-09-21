@@ -20,8 +20,13 @@
 - Deployment and load smoke scripts under `scripts/`.
 - Stage-level fare timings, bounded OSRM TTL caching with request coalescing, and fare-endpoint load smoke testing.
 - Verified Open-Meteo weather-risk and TomTom traffic-pressure provider modes with provenance labels.
+- Added the supplied FUTO endpoint coordinate catalog, a provenance-preserving `/api/v1/locations` endpoint, and dataset-backed frontend endpoint selection.
 
 - Added the initial ML research pipeline: validated records, provenance-aware CSV preprocessing, leakage-safe feature engineering, respondent-grouped splitting, and classification evaluation metrics.
+
+- Prepared the FUTO Google Forms export and ran grouped baseline model comparisons with reproducible JSON reporting.
+
+- Added FUTO route/time ablations, class-balanced baseline comparisons, per-class recall, and fold confusion matrices.
 
 ## Planned
 
@@ -31,7 +36,7 @@
 - Replace the in-process rate limiter and metrics registry with shared production
   backends when running more than one API replica.
 - Add managed log/metric alerting, API-key rotation, and deployment load thresholds.
-- Research dataset preparation and provenance-controlled ML experiments.
+
 - Production map provider rendering and calibrated pricing coefficients.
 
 ## Research decisions required

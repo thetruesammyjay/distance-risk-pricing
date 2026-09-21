@@ -19,10 +19,12 @@ from services.api_gateway.app.observability import MetricsRegistry, SlidingWindo
 from services.api_gateway.app.schemas import (
     FareEstimateRequest,
     FareEstimateResponse,
+    LocationResponse,
     RiskResponse,
     RouteResponse,
 )
 from services.common.errors import DomainError
+from services.routing_service.locations import LocationCatalog
 from services.routing_service.models import Coordinates
 
 settings = get_settings()
@@ -45,6 +47,7 @@ async def lifespan(application: FastAPI):
 def create_app(
     app_settings: Settings | None = None,
     service: object | None = None,
+    location_catalog: LocationCatalog | None = None,
 ) -> FastAPI:
     runtime_settings = app_settings or settings
     runtime_service = service or fare_service
@@ -56,6 +59,9 @@ def create_app(
     )
     application.state.settings = runtime_settings
     application.state.fare_service = runtime_service
+    application.state.location_catalog = location_catalog or LocationCatalog.from_csv(
+        runtime_settings.location_catalog_path
+    )
     application.state.metrics = MetricsRegistry()
     application.state.rate_limiter = SlidingWindowRateLimiter(
         runtime_settings.rate_limit_requests, runtime_settings.rate_limit_window_seconds
@@ -192,6 +198,24 @@ async def estimate_route(payload: FareEstimateRequest, request: Request) -> Rout
         Coordinates(payload.destination.latitude, payload.destination.longitude),
     )
     return route_response(route)
+
+
+@router.get("/locations", response_model=list[LocationResponse])
+async def list_locations(request: Request) -> list[LocationResponse]:
+    locations = request.app.state.location_catalog.all()
+    return [
+        LocationResponse(
+            location_id=location.location_id,
+            endpoint_name=location.endpoint_name,
+            latitude=location.coordinates.latitude,
+            longitude=location.coordinates.longitude,
+            collected_at=location.collected_at,
+            source=location.source,
+            source_url=location.source_url,
+            notes=location.notes,
+        )
+        for location in locations
+    ]
 
 
 @router.post("/risk/estimate")

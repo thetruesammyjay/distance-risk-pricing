@@ -29,8 +29,8 @@ class StubRouting:
 
 def payload():
     return {
-        "origin": {"latitude": 5.3921, "longitude": 7.0337},
-        "destination": {"latitude": 5.4865, "longitude": 7.0259},
+        "origin": {"latitude": 5.4005546, "longitude": 6.9841672},
+        "destination": {"latitude": 5.395214, "longitude": 7.009140},
         "requested_at": datetime.now(UTC).isoformat(),
     }
 
@@ -50,6 +50,16 @@ def test_ready_and_metrics_endpoints():
     metrics_response = client.get("/metrics")
     assert metrics_response.status_code == 200
     assert "http_requests_total" in metrics_response.text
+
+
+def test_locations_endpoint_returns_supplied_futo_catalog():
+    response = TestClient(app).get("/api/v1/locations")
+    assert response.status_code == 200
+    locations = response.json()
+    assert locations[0]["endpoint_name"] == "FUTO Main Gate"
+    assert locations[0]["latitude"] == 5.4005546
+    assert locations[0]["longitude"] == 6.9841672
+    assert any(location["endpoint_name"] == "FUTO Back Gate" for location in locations)
 
 
 def test_api_key_authentication_can_be_enabled():
