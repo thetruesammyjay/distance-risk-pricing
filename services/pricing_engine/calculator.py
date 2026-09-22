@@ -14,6 +14,16 @@ def money(value: Decimal) -> Decimal:
     return value.quantize(CENT, rounding=ROUND_HALF_UP)
 
 
+def distance_adjusted_base_fare(
+    distance_km: Decimal,
+    minimum_base_fare: Decimal,
+    distance_rate: Decimal,
+) -> Decimal:
+    """Calculate the distance-aware base fare without a second distance charge."""
+
+    return max(minimum_base_fare, distance_rate * distance_km)
+
+
 class PricingStrategy(ABC):
     @abstractmethod
     def calculate(self, context: PricingContext, config: PricingConfig) -> FareBreakdown:
@@ -21,11 +31,15 @@ class PricingStrategy(ABC):
 
 
 class AdditivePricingStrategy(PricingStrategy):
-    """Implements the original research formula: B + aD + bDR + gM."""
+    """Implements B_D + bDR + gM, where B_D = max(B_min, aD)."""
 
     def calculate(self, context: PricingContext, config: PricingConfig) -> FareBreakdown:
-        base = config.base_fare
-        distance = config.distance_rate * context.distance_km
+        base = distance_adjusted_base_fare(
+            context.distance_km,
+            config.base_fare,
+            config.distance_rate,
+        )
+        distance = Decimal("0")
         risk = config.risk_rate * context.distance_km * context.risk_score
         demand = config.demand_sensitivity * context.demand_multiplier
         return FareBreakdown(
@@ -42,11 +56,15 @@ class AdditivePricingStrategy(PricingStrategy):
 
 
 class MultiplicativePricingStrategy(PricingStrategy):
-    """Experimental alternative: (B + aD + bDR) * M."""
+    """Experimental alternative: (B_D + bDR) * M."""
 
     def calculate(self, context: PricingContext, config: PricingConfig) -> FareBreakdown:
-        base = config.base_fare
-        distance = config.distance_rate * context.distance_km
+        base = distance_adjusted_base_fare(
+            context.distance_km,
+            config.base_fare,
+            config.distance_rate,
+        )
+        distance = Decimal("0")
         risk = config.risk_rate * context.distance_km * context.risk_score
         subtotal = base + distance + risk
         demand = subtotal * (context.demand_multiplier - Decimal("1"))

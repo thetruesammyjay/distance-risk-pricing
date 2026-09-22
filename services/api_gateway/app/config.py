@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     pricing_demand_sensitivity: Decimal = Field(default=Decimal("1"), ge=0)
     pricing_demand_cap: Decimal = Field(default=Decimal("2.5"), ge=1)
     pricing_formula_mode: Literal["additive", "multiplicative"] = "additive"
-    pricing_formula_version: str = "v1"
+    pricing_formula_version: str = "v2-distance-base"
     pricing_coefficient_version: str = "prototype-v1"
     risk_mode: Literal["simulated", "open_meteo", "external"] = "simulated"
     risk_provider_url: str | None = None

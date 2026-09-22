@@ -451,27 +451,32 @@ The Pricing Engine is the core domain component. It receives distance, risk, dem
 
 ## Pricing Model
 
-The original proposed pricing function is:
+The implemented pricing function uses a distance-adjusted base fare:
 
 ```text
-F = B + (α × D) + (β × D × R) + (γ × M)
+B_D = max(B_min, α × D)
+F = B_D + (β × D × R) + (γ × M)
 ```
 
 | Symbol | Meaning |
 |---|---|
 | F | Final fare |
-| B | Base fare |
+| B_min | Minimum base fare |
+| B_D | Distance-adjusted base fare |
 | D | Trip distance |
 | R | Route Risk Coefficient |
 | M | Demand factor |
-| α | Distance-rate coefficient |
+| α | Distance-based base-fare rate |
 | β | Risk-premium coefficient |
 | γ | Demand-sensitivity coefficient |
 
-Before empirical evaluation, the implementation should explicitly define whether `M` is treated as an additive demand term or as a true multiplier. A multiplicative formulation may instead be expressed as:
+The distance charge is included inside `B_D`; it is not added again as a
+separate distance component. With the prototype values, the base fare is
+`max(₦500, ₦150 × distance_km)`. A multiplicative experimental formulation
+may instead be expressed as:
 
 ```text
-F = [B + (α × D) + (β × D × R)] × M
+F = [B_D + (β × D × R)] × M
 ```
 
 The selected formulation must remain consistent across source code, API documentation, experiments, dissertation/seminar documentation, user interface, and research results.
@@ -715,11 +720,11 @@ Example response:
   },
   "fare": {
     "currency": "NGN",
-    "base": 500,
-    "distance_component": 1920,
+    "base": 1920,
+    "distance_component": 0,
     "risk_adjustment": 585,
     "demand_adjustment": 901,
-    "total": 3906
+    "total": 3406
   }
 }
 ```
@@ -857,6 +862,7 @@ ROUTING_BASE_URL=https://router.project-osrm.org
 DEMAND_MODE=time_of_day
 DEMAND_TIMEZONE=Africa/Lagos
 
+# Base fare = max(PRICING_BASE_FARE, PRICING_DISTANCE_RATE * distance_km)
 PRICING_BASE_FARE=500
 PRICING_DISTANCE_RATE=150
 PRICING_RISK_WEIGHT=0.30

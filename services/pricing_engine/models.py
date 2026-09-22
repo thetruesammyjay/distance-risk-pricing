@@ -15,7 +15,7 @@ class PricingConfig:
     demand_sensitivity: Decimal
     demand_cap: Decimal
     formula_mode: FormulaMode = "additive"
-    formula_version: str = "v1"
+    formula_version: str = "v2-distance-base"
     coefficient_version: str = "prototype-v1"
     currency: str = "NGN"
 

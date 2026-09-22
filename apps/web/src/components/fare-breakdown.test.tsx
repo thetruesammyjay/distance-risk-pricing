@@ -28,13 +28,13 @@ const quote = {
   },
   fare: {
     currency: 'NGN',
-    base_fare: 500,
-    distance_component: 1500,
+    base_fare: 1500,
+    distance_component: 0,
     risk_adjustment: 6,
     demand_adjustment: 1,
     total: 2007,
     formula_mode: 'additive' as const,
-    formula_version: 'v1',
+    formula_version: 'v2-distance-base',
     coefficient_version: 'prototype-v1',
   },
   timings_ms: { routing: 1, risk: 1, demand: 1, pricing: 1, database_persistence: 1 },
@@ -43,5 +43,5 @@ const quote = {
 test('renders an explainable fare breakdown', () => {
   render(<FareBreakdown quote={quote} />);
   expect(screen.getByText(/estimated fare/i)).toBeInTheDocument();
-  expect(screen.getByText(/distance component/i)).toBeInTheDocument();
+  expect(screen.getByText(/distance-adjusted base fare/i)).toBeInTheDocument();
 });

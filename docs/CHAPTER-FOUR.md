@@ -447,8 +447,8 @@ values do not acquire avoidable binary rounding errors.
 | risk_classification | VARCHAR(32) | Not null | Stores Low, Moderate, High, or Very High. |
 | demand_multiplier | NUMERIC(8,4) | Not null; application minimum 1 | Stores the demand value supplied to the pricing engine. |
 | currency | VARCHAR(3) | Not null; three uppercase letters | Stores the fare currency, currently NGN. |
-| base_fare | NUMERIC(12,2) | Not null | Stores the configured fixed fare component. |
-| distance_component | NUMERIC(12,2) | Not null | Stores the distance-based fare component. |
+| base_fare | NUMERIC(12,2) | Not null | Stores the distance-adjusted base fare, subject to the configured minimum. |
+| distance_component | NUMERIC(12,2) | Not null | Retained for response compatibility and stored as zero because distance is included in base_fare. |
 | risk_adjustment | NUMERIC(12,2) | Not null | Stores the risk contribution to the fare. |
 | demand_adjustment | NUMERIC(12,2) | Not null | Stores the demand contribution to the fare. |
 | total_fare | NUMERIC(12,2) | Not null | Stores the rounded final fare returned to the client. |
@@ -585,19 +585,22 @@ It is not a replacement for observed ride-request, supply, or traffic data.
 
 #### 4.5.4 Fare Calculation
 
-The default additive strategy implements the formula described in Chapter Two:
+The implemented additive strategy uses the distance-adjusted base fare:
 
 ~~~text
-F = B + (alpha x D) + (beta x D x R) + (gamma x M)
+B_D = max(B_min, alpha x D)
+F = B_D + (beta x D x R) + (gamma x M)
 ~~~
 
-where B is the base fare, D is route distance, R is the Route Risk
-Coefficient, M is the demand multiplier, and alpha, beta, and gamma are
-configured coefficients. The implementation also contains an experimental
+where B_min is the minimum base fare, B_D is the distance-adjusted base fare,
+D is route distance, R is the Route Risk Coefficient, M is the demand
+multiplier, and alpha, beta, and gamma are configured coefficients. The
+distance charge is included once in B_D; it is not added again as a separate
+distance component. The implementation also contains an experimental
 multiplicative strategy:
 
 ~~~text
-F = (B + (alpha x D) + (beta x D x R)) x M
+F = (B_D + (beta x D x R)) x M
 ~~~
 
 The additive strategy is the configured prototype default because it exposes
@@ -613,13 +616,13 @@ The current values are illustrative prototype values:
 
 | Parameter | Meaning | Prototype value |
 |---|---|---:|
-| pricing_base_fare | Fixed starting fare | 500 NGN |
-| pricing_distance_rate | Fare per kilometre | 150 NGN/km |
+| pricing_base_fare | Minimum base fare | 500 NGN |
+| pricing_distance_rate | Distance-based base-fare rate | 150 NGN/km |
 | pricing_risk_rate | Risk-distance coefficient | 1 |
 | pricing_demand_sensitivity | Sensitivity to demand pressure | 1 |
 | pricing_demand_cap | Maximum demand multiplier | 2.5 |
 | pricing_formula_mode | Active formula strategy | additive |
-| pricing_formula_version | Formula identifier | v1 |
+| pricing_formula_version | Formula identifier | v2-distance-base |
 
 These coefficients have not been calibrated with commercial fare or financial
 loss data. They are therefore reported as prototype settings, not as an

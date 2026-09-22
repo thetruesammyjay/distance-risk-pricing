@@ -54,4 +54,4 @@ services:
       - key: PRICING_FORMULA_MODE
         value: additive
       - key: PRICING_FORMULA_VERSION
-        value: v1
+        value: v2-distance-base
