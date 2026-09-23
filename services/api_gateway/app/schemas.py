@@ -63,6 +63,7 @@ class RiskComponentsResponse(BaseModel):
     accident: float | None
     road: float | None
     security: float | None
+    questionnaire: float | None = None
 
 
 class RiskResponse(BaseModel):

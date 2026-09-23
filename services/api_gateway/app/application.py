@@ -117,6 +117,9 @@ class FareEstimationService:
                     security=float(risk.components.security)
                     if risk.components.security is not None
                     else None,
+                    questionnaire=float(risk.components.questionnaire)
+                    if risk.components.questionnaire is not None
+                    else None,
                 ),
                 components_available=list(risk.components_available),
                 components_missing=list(risk.components_missing),

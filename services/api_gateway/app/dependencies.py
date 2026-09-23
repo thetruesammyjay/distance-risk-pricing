@@ -13,6 +13,7 @@ from services.demand_service.service import (
     TimeOfDayDemandProvider,
     UnavailableDemandProvider,
 )
+from services.risk_service.futo_survey import FutoSurveyRiskProvider
 from services.risk_service.service import (
     ExternalRiskProvider,
     OpenMeteoRiskProvider,
@@ -44,6 +45,12 @@ def build_fare_service(settings: Settings) -> FareEstimationService:
     )
     if settings.risk_mode == "simulated":
         risk_provider = SimulatedRiskProvider(settings.simulation_seed)
+    elif settings.risk_mode == "futo_survey":
+        risk_provider = FutoSurveyRiskProvider(
+            settings.risk_survey_profile_path,
+            location_catalog_path=settings.location_catalog_path,
+            timezone_name=settings.risk_survey_timezone,
+        )
     elif settings.risk_mode == "open_meteo" and settings.risk_provider_url:
         risk_provider = OpenMeteoRiskProvider(
             settings.risk_provider_url,

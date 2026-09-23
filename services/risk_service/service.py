@@ -22,6 +22,7 @@ class RiskComponents:
     accident: Decimal | None
     road: Decimal | None
     security: Decimal | None
+    questionnaire: Decimal | None = None
 
 
 @dataclass(frozen=True)
@@ -43,6 +44,7 @@ class RiskObservation:
     source_type: str
     data_sources: tuple[str, ...]
     model_version: str
+    composite_score: Decimal | None = None
 
 
 class RiskProvider(Protocol):
@@ -297,6 +299,7 @@ class ExternalRiskProvider:
                     _decimal_or_none(components.get("accident")),
                     _decimal_or_none(components.get("road")),
                     _decimal_or_none(components.get("security")),
+                    _decimal_or_none(components.get("questionnaire")),
                 ),
                 source_type=str(response.get("source_type", "external")),
                 data_sources=tuple(str(item) for item in response.get("data_sources", ())),
@@ -395,7 +398,15 @@ class RiskService:
             raise DomainError(
                 "RISK_DATA_UNAVAILABLE", "The risk provider returned an unknown source type."
             )
-        score, available, missing, strategy = aggregate_risk(observation.components, self.weights)
+        if observation.composite_score is not None:
+            score = _validate_risk_score(observation.composite_score)
+            available = ("questionnaire",)
+            missing = ("accident", "road", "security")
+            strategy = "questionnaire_composite_score"
+        else:
+            score, available, missing, strategy = aggregate_risk(
+                observation.components, self.weights
+            )
         return RiskEstimate(
             score=score.quantize(Decimal("0.0001")),
             classification=classify_risk(score),
@@ -454,3 +465,11 @@ def _decimal_or_none(value: object) -> Decimal | None:
         return Decimal(str(value))
     except (ArithmeticError, ValueError) as exc:
         raise ValueError("risk component must be numeric") from exc
+
+
+def _validate_risk_score(score: Decimal) -> Decimal:
+    if not score.is_finite() or not Decimal("0") <= score <= Decimal("1"):
+        raise DomainError(
+            "INVALID_RISK_CONFIGURATION", "Composite risk score must be between 0 and 1."
+        )
+    return score

@@ -45,6 +45,16 @@ def test_distance_adjusted_base_fare_respects_minimum() -> None:
     assert short_trip.distance_component == Decimal("0.00")
 
 
+def test_low_risk_has_no_risk_premium() -> None:
+    result = calculate_fare(
+        PricingContext(Decimal("10"), Decimal("0.25"), Decimal("1")),
+        config(),
+    )
+
+    assert result.risk_adjustment == Decimal("0.00")
+    assert result.total == Decimal("1600.00")
+
+
 def test_invalid_distance_is_rejected() -> None:
     with pytest.raises(ValueError, match="distance"):
         PricingContext(Decimal("0"), Decimal("0"), Decimal("1"))

@@ -28,7 +28,11 @@ services:
       - key: PROVIDER_RETRIES
         value: "2"
       - key: RISK_MODE
-        value: external
+        value: futo_survey
+      - key: RISK_SURVEY_PROFILE_PATH
+        value: data/processed/futo_route_risk_profile.csv
+      - key: RISK_SURVEY_TIMEZONE
+        value: Africa/Lagos
       - key: RISK_PROVIDER_URL
         sync: false
       - key: RISK_PROVIDER_API_KEY

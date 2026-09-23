@@ -6,6 +6,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from services.pricing_engine.models import FareBreakdown, PricingConfig, PricingContext
 
 CENT = Decimal("0.01")
+LOW_RISK_CUTOFF = Decimal("0.25")
 
 
 def money(value: Decimal) -> Decimal:
@@ -24,6 +25,14 @@ def distance_adjusted_base_fare(
     return max(minimum_base_fare, distance_rate * distance_km)
 
 
+def risk_premium_score(risk_score: Decimal) -> Decimal:
+    """Apply the classification rule that Low risk has no risk premium."""
+
+    if not risk_score.is_finite() or not Decimal("0") <= risk_score <= Decimal("1"):
+        raise ValueError("risk score must be between 0 and 1")
+    return Decimal("0") if risk_score <= LOW_RISK_CUTOFF else risk_score
+
+
 class PricingStrategy(ABC):
     @abstractmethod
     def calculate(self, context: PricingContext, config: PricingConfig) -> FareBreakdown:
@@ -31,7 +40,7 @@ class PricingStrategy(ABC):
 
 
 class AdditivePricingStrategy(PricingStrategy):
-    """Implements B_D + bDR + gM, where B_D = max(B_min, aD)."""
+    """Implements B_D + bDR_p + gM, where B_D = max(B_min, aD)."""
 
     def calculate(self, context: PricingContext, config: PricingConfig) -> FareBreakdown:
         base = distance_adjusted_base_fare(
@@ -40,7 +49,11 @@ class AdditivePricingStrategy(PricingStrategy):
             config.distance_rate,
         )
         distance = Decimal("0")
-        risk = config.risk_rate * context.distance_km * context.risk_score
+        risk = (
+            config.risk_rate
+            * context.distance_km
+            * risk_premium_score(context.risk_score)
+        )
         demand = config.demand_sensitivity * context.demand_multiplier
         return FareBreakdown(
             currency=config.currency,
@@ -56,7 +69,7 @@ class AdditivePricingStrategy(PricingStrategy):
 
 
 class MultiplicativePricingStrategy(PricingStrategy):
-    """Experimental alternative: (B_D + bDR) * M."""
+    """Experimental alternative: (B_D + bDR_p) * M."""
 
     def calculate(self, context: PricingContext, config: PricingConfig) -> FareBreakdown:
         base = distance_adjusted_base_fare(
@@ -65,7 +78,11 @@ class MultiplicativePricingStrategy(PricingStrategy):
             config.distance_rate,
         )
         distance = Decimal("0")
-        risk = config.risk_rate * context.distance_km * context.risk_score
+        risk = (
+            config.risk_rate
+            * context.distance_km
+            * risk_premium_score(context.risk_score)
+        )
         subtotal = base + distance + risk
         demand = subtotal * (context.demand_multiplier - Decimal("1"))
         return FareBreakdown(

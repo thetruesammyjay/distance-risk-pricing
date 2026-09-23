@@ -146,26 +146,49 @@ Distance is obtained from a routing service rather than relying exclusively on s
 
 ### Route Risk Assessment
 
-The system supports a composite Route Risk Coefficient based on available risk indicators:
+The default FUTO risk provider uses the supplied questionnaire's composite
+perceived-risk response for the selected route and time band:
 
 ```mermaid
 flowchart LR
-    A[Accident Risk] --> D[Route Risk Coefficient]
-    B[Road Condition Risk] --> D
-    C[Security Risk] --> D
+    A[Route and time] --> B[FUTO questionnaire profile]
+    B --> C[Questionnaire composite risk score]
+    C --> D[Route Risk Coefficient]
 ```
 
-Only risk components backed by available or explicitly simulated data should be enabled in experimental results.
-
-### Time-Aware Security Risk
-
-Where questionnaire or historical observations contain risk assessments across different periods, security risk can vary according to both route and time period:
+The survey labels are ordinal. Each response is mapped to the midpoint of its
+classification band and averaged across respondents:
 
 ```text
-SecurityRisk = f(Route, Time)
+R_questionnaire = (1 / n) x SUM((risk_ordinal - 0.5) / 4)
 ```
 
-This allows the same route to have different risk estimates at different times.
+The mapping is Low Risk = 0.125, Moderate Risk = 0.375, High Risk = 0.625,
+and Very High Risk = 0.875. Exact route/time profiles are used where the
+survey route can be matched to the supplied endpoint coordinates. For an
+endpoint pair not covered by the survey route list, the provider uses the
+corresponding all-survey-routes time prior and records that fallback in
+`data_sources`.
+
+The questionnaire asks about road quality, accident risk, security,
+congestion, and overall safety in one response. It does not provide separate
+measurements for those dimensions, so the API returns the composite value in
+`components.questionnaire` and leaves `accident`, `road`, and `security` null.
+This prevents a perceived composite score from being misrepresented as three
+independent observed risk signals.
+
+### Time-Aware Questionnaire Risk
+
+The same surveyed route can receive different risk estimates at different
+times:
+
+```text
+QuestionnaireRisk = f(Route, Time)
+```
+
+The active provider uses the `Africa/Lagos` timezone and the five survey
+periods from 07:00 to 22:00. Times outside that window are clamped to the
+nearest observed band and the selection is labelled in the response.
 
 ### Dynamic Demand Adjustment
 
@@ -455,7 +478,8 @@ The implemented pricing function uses a distance-adjusted base fare:
 
 ```text
 B_D = max(B_min, α × D)
-F = B_D + (β × D × R) + (γ × M)
+R_p = 0, when R <= 0.25; otherwise R_p = R
+F = B_D + (β × D × R_p) + (γ × M)
 ```
 
 | Symbol | Meaning |
@@ -465,6 +489,7 @@ F = B_D + (β × D × R) + (γ × M)
 | B_D | Distance-adjusted base fare |
 | D | Trip distance |
 | R | Route Risk Coefficient |
+| R_p | Risk-premium score after the Low-risk waiver |
 | M | Demand factor |
 | α | Distance-based base-fare rate |
 | β | Risk-premium coefficient |
@@ -476,7 +501,7 @@ separate distance component. With the prototype values, the base fare is
 may instead be expressed as:
 
 ```text
-F = [B_D + (β × D × R)] × M
+F = [B_D + (β × D × R_p)] × M
 ```
 
 The selected formulation must remain consistent across source code, API documentation, experiments, dissertation/seminar documentation, user interface, and research results.
@@ -485,7 +510,8 @@ The selected formulation must remain consistent across source code, API document
 
 ## Route Risk Model
 
-The proposed Route Risk Coefficient is:
+When independent accident, road, and security components are available, the
+general weighted Route Risk Coefficient is:
 
 ```text
 R = (w1 × R_acc) + (w2 × R_road) + (w3 × R_sec)
@@ -498,9 +524,23 @@ w1 + w2 + w3 = 1
 0 <= R <= 1
 ```
 
+For the active FUTO questionnaire mode, the composite route/time score is
+used instead of inventing independent values for the three components. The
+questionnaire response is mapped to the midpoint of its risk band and
+averaged across respondents:
+
+```text
+R_questionnaire = (1 / n) x SUM((risk_ordinal - 0.5) / 4)
+```
+
+This produces Low Risk = 0.125, Moderate Risk = 0.375, High Risk = 0.625,
+and Very High Risk = 0.875. The result is returned as
+`components.questionnaire`; `accident`, `road`, and `security` remain null
+because the survey did not measure those dimensions independently.
+
 * **Accident Risk (R_acc)** — normalized accident exposure
 * **Road Risk (R_road)** — road-condition-related operating risk; higher values represent poorer or more difficult road conditions
-* **Security Risk (R_sec)** — available security-risk information. Where perception questionnaires are used, this must be described as a **perceived security-risk measure**, not verified crime probability
+* **Security Risk (R_sec)** — independently measured security-risk information
 
 ---
 
@@ -561,6 +601,19 @@ Normalized route risk can be mapped into human-readable categories:
 | 0.76 – 1.00 | Very High |
 
 These thresholds are configurable and should not automatically be interpreted as externally validated safety thresholds. They are primarily system-level classification bands unless empirical validation establishes otherwise.
+
+The pricing behavior tied to these bands is:
+
+| Classification | Pricing behavior |
+|---|---|
+| Low | No risk premium; the independent demand adjustment remains active |
+| Moderate | Continuous `β × D × R` risk premium |
+| High | Higher continuous `β × D × R` risk premium |
+| Very High | Maximum risk premium within the normalized `R` range |
+
+The Low-risk waiver is implemented by setting `R_p` to zero at scores up to
+0.25. The other bands use `R_p = R`, so the premium increases continuously
+with the normalized risk score.
 
 ---
 
@@ -861,6 +914,10 @@ ROUTING_BASE_URL=https://router.project-osrm.org
 
 DEMAND_MODE=time_of_day
 DEMAND_TIMEZONE=Africa/Lagos
+
+RISK_MODE=futo_survey
+RISK_SURVEY_PROFILE_PATH=data/processed/futo_route_risk_profile.csv
+RISK_SURVEY_TIMEZONE=Africa/Lagos
 
 # Base fare = max(PRICING_BASE_FARE, PRICING_DISTANCE_RATE * distance_km)
 PRICING_BASE_FARE=500

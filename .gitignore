@@ -30,6 +30,7 @@ data/external/*
 !data/raw/.gitkeep
 !data/interim/.gitkeep
 !data/processed/.gitkeep
+!data/processed/futo_route_risk_profile.csv
 !data/external/.gitkeep
 ml/models/*.pkl
 ml/models/*.joblib

@@ -1,0 +1,106 @@
+route_id,route_name,time_band,response_count,mean_risk_ordinal,risk_score
+eziobodo-junction-to-futo-back-gate,Eziobodo Junction to FUTO Back Gate,10:00 AM - 1:00 PM,112,1.3750,0.2188
+eziobodo-junction-to-futo-back-gate,Eziobodo Junction to FUTO Back Gate,1:00 PM - 4:00 PM,112,1.4286,0.2321
+eziobodo-junction-to-futo-back-gate,Eziobodo Junction to FUTO Back Gate,4:00 PM - 7:00 PM,112,2.1429,0.4107
+eziobodo-junction-to-futo-back-gate,Eziobodo Junction to FUTO Back Gate,7:00 AM - 10:00 AM,112,1.7589,0.3147
+eziobodo-junction-to-futo-back-gate,Eziobodo Junction to FUTO Back Gate,7:00 PM - 10:00 PM,112,3.2946,0.6987
+futo-main-gate-to-1000-caps-following-under-the-bridge,FUTO Main Gate to 1000 CAPS (following under the bridge),10:00 AM - 1:00 PM,112,1.4107,0.2277
+futo-main-gate-to-1000-caps-following-under-the-bridge,FUTO Main Gate to 1000 CAPS (following under the bridge),1:00 PM - 4:00 PM,112,1.5000,0.2500
+futo-main-gate-to-1000-caps-following-under-the-bridge,FUTO Main Gate to 1000 CAPS (following under the bridge),4:00 PM - 7:00 PM,112,2.3929,0.4732
+futo-main-gate-to-1000-caps-following-under-the-bridge,FUTO Main Gate to 1000 CAPS (following under the bridge),7:00 AM - 10:00 AM,112,1.9018,0.3504
+futo-main-gate-to-1000-caps-following-under-the-bridge,FUTO Main Gate to 1000 CAPS (following under the bridge),7:00 PM - 10:00 PM,112,3.4196,0.7299
+futo-main-gate-to-eziobodo-junction,FUTO Main Gate to Eziobodo Junction,10:00 AM - 1:00 PM,112,1.2321,0.1830
+futo-main-gate-to-eziobodo-junction,FUTO Main Gate to Eziobodo Junction,1:00 PM - 4:00 PM,112,1.2679,0.1920
+futo-main-gate-to-eziobodo-junction,FUTO Main Gate to Eziobodo Junction,4:00 PM - 7:00 PM,112,1.8482,0.3371
+futo-main-gate-to-eziobodo-junction,FUTO Main Gate to Eziobodo Junction,7:00 AM - 10:00 AM,112,1.5179,0.2545
+futo-main-gate-to-eziobodo-junction,FUTO Main Gate to Eziobodo Junction,7:00 PM - 10:00 PM,112,2.9911,0.6228
+futo-main-gate-to-school-roundabout,FUTO Main Gate to School Roundabout,10:00 AM - 1:00 PM,112,1.2054,0.1763
+futo-main-gate-to-school-roundabout,FUTO Main Gate to School Roundabout,1:00 PM - 4:00 PM,112,1.3304,0.2076
+futo-main-gate-to-school-roundabout,FUTO Main Gate to School Roundabout,4:00 PM - 7:00 PM,112,2.0804,0.3951
+futo-main-gate-to-school-roundabout,FUTO Main Gate to School Roundabout,7:00 AM - 10:00 AM,112,1.6071,0.2768
+futo-main-gate-to-school-roundabout,FUTO Main Gate to School Roundabout,7:00 PM - 10:00 PM,112,3.2679,0.6920
+hostel-area-to-futo-main-gate,Hostel Area to FUTO Main Gate,10:00 AM - 1:00 PM,112,1.1696,0.1674
+hostel-area-to-futo-main-gate,Hostel Area to FUTO Main Gate,1:00 PM - 4:00 PM,112,1.1607,0.1652
+hostel-area-to-futo-main-gate,Hostel Area to FUTO Main Gate,4:00 PM - 7:00 PM,112,1.9196,0.3549
+hostel-area-to-futo-main-gate,Hostel Area to FUTO Main Gate,7:00 AM - 10:00 AM,112,1.4643,0.2411
+hostel-area-to-futo-main-gate,Hostel Area to FUTO Main Gate,7:00 PM - 10:00 PM,112,3.0804,0.6451
+hostel-c-to-roundabout,Hostel C to Roundabout,10:00 AM - 1:00 PM,112,1.1071,0.1518
+hostel-c-to-roundabout,Hostel C to Roundabout,1:00 PM - 4:00 PM,112,1.0982,0.1496
+hostel-c-to-roundabout,Hostel C to Roundabout,4:00 PM - 7:00 PM,112,1.5625,0.2656
+hostel-c-to-roundabout,Hostel C to Roundabout,7:00 AM - 10:00 AM,112,1.2232,0.1808
+hostel-c-to-roundabout,Hostel C to Roundabout,7:00 PM - 10:00 PM,112,2.4554,0.4888
+ict-centre-to-library,ICT Centre to Library,10:00 AM - 1:00 PM,112,1.1518,0.1629
+ict-centre-to-library,ICT Centre to Library,1:00 PM - 4:00 PM,112,1.1607,0.1652
+ict-centre-to-library,ICT Centre to Library,4:00 PM - 7:00 PM,112,1.6518,0.2879
+ict-centre-to-library,ICT Centre to Library,7:00 AM - 10:00 AM,112,1.2857,0.1964
+ict-centre-to-library,ICT Centre to Library,7:00 PM - 10:00 PM,112,2.6161,0.5290
+library-to-love-garden,Library to Love Garden,10:00 AM - 1:00 PM,112,1.1607,0.1652
+library-to-love-garden,Library to Love Garden,1:00 PM - 4:00 PM,112,1.1786,0.1696
+library-to-love-garden,Library to Love Garden,4:00 PM - 7:00 PM,112,1.6339,0.2835
+library-to-love-garden,Library to Love Garden,7:00 AM - 10:00 AM,112,1.3393,0.2098
+library-to-love-garden,Library to Love Garden,7:00 PM - 10:00 PM,112,2.5179,0.5045
+library-to-senate-building,Library to Senate Building,10:00 AM - 1:00 PM,112,1.1696,0.1674
+library-to-senate-building,Library to Senate Building,1:00 PM - 4:00 PM,112,1.2411,0.1853
+library-to-senate-building,Library to Senate Building,4:00 PM - 7:00 PM,112,1.9018,0.3504
+library-to-senate-building,Library to Senate Building,7:00 AM - 10:00 AM,112,1.5179,0.2545
+library-to-senate-building,Library to Senate Building,7:00 PM - 10:00 PM,112,2.9643,0.6161
+love-garden-to-tetfund-hostel,Love Garden to Tetfund Hostel,10:00 AM - 1:00 PM,112,1.1875,0.1719
+love-garden-to-tetfund-hostel,Love Garden to Tetfund Hostel,1:00 PM - 4:00 PM,112,1.1786,0.1696
+love-garden-to-tetfund-hostel,Love Garden to Tetfund Hostel,4:00 PM - 7:00 PM,112,1.6339,0.2835
+love-garden-to-tetfund-hostel,Love Garden to Tetfund Hostel,7:00 AM - 10:00 AM,112,1.3839,0.2210
+love-garden-to-tetfund-hostel,Love Garden to Tetfund Hostel,7:00 PM - 10:00 PM,112,2.6964,0.5491
+school-roundabout-to-eziobodo-lodge-area,School Roundabout to Eziobodo lodge area,10:00 AM - 1:00 PM,112,1.2054,0.1763
+school-roundabout-to-eziobodo-lodge-area,School Roundabout to Eziobodo lodge area,1:00 PM - 4:00 PM,112,1.2946,0.1987
+school-roundabout-to-eziobodo-lodge-area,School Roundabout to Eziobodo lodge area,4:00 PM - 7:00 PM,112,1.7411,0.3103
+school-roundabout-to-eziobodo-lodge-area,School Roundabout to Eziobodo lodge area,7:00 AM - 10:00 AM,112,1.3482,0.2121
+school-roundabout-to-eziobodo-lodge-area,School Roundabout to Eziobodo lodge area,7:00 PM - 10:00 PM,112,2.7143,0.5536
+school-roundabout-to-library,School Roundabout to Library,10:00 AM - 1:00 PM,112,1.1250,0.1563
+school-roundabout-to-library,School Roundabout to Library,1:00 PM - 4:00 PM,112,1.1518,0.1629
+school-roundabout-to-library,School Roundabout to Library,4:00 PM - 7:00 PM,112,1.7143,0.3036
+school-roundabout-to-library,School Roundabout to Library,7:00 AM - 10:00 AM,112,1.2946,0.1987
+school-roundabout-to-library,School Roundabout to Library,7:00 PM - 10:00 PM,112,2.7679,0.5670
+school-roundabout-to-medicals,School Roundabout to Medicals,10:00 AM - 1:00 PM,112,1.1696,0.1674
+school-roundabout-to-medicals,School Roundabout to Medicals,1:00 PM - 4:00 PM,112,1.1964,0.1741
+school-roundabout-to-medicals,School Roundabout to Medicals,4:00 PM - 7:00 PM,112,1.7054,0.3013
+school-roundabout-to-medicals,School Roundabout to Medicals,7:00 AM - 10:00 AM,112,1.3482,0.2121
+school-roundabout-to-medicals,School Roundabout to Medicals,7:00 PM - 10:00 PM,112,2.6875,0.5469
+school-roundabout-to-seet,School Roundabout to SEET,10:00 AM - 1:00 PM,112,1.1250,0.1563
+school-roundabout-to-seet,School Roundabout to SEET,1:00 PM - 4:00 PM,112,1.1429,0.1607
+school-roundabout-to-seet,School Roundabout to SEET,4:00 PM - 7:00 PM,112,1.5804,0.2701
+school-roundabout-to-seet,School Roundabout to SEET,7:00 AM - 10:00 AM,112,1.2232,0.1808
+school-roundabout-to-seet,School Roundabout to SEET,7:00 PM - 10:00 PM,112,2.4554,0.4888
+school-roundabout-to-smat,School Roundabout to SMAT,10:00 AM - 1:00 PM,112,1.1875,0.1719
+school-roundabout-to-smat,School Roundabout to SMAT,1:00 PM - 4:00 PM,112,1.2500,0.1875
+school-roundabout-to-smat,School Roundabout to SMAT,4:00 PM - 7:00 PM,112,2.1071,0.4018
+school-roundabout-to-smat,School Roundabout to SMAT,7:00 AM - 10:00 AM,112,1.4018,0.2254
+school-roundabout-to-smat,School Roundabout to SMAT,7:00 PM - 10:00 PM,112,3.2768,0.6942
+school-roundabout-to-soht,School Roundabout to SOHT,10:00 AM - 1:00 PM,112,1.1161,0.1540
+school-roundabout-to-soht,School Roundabout to SOHT,1:00 PM - 4:00 PM,112,1.1786,0.1696
+school-roundabout-to-soht,School Roundabout to SOHT,4:00 PM - 7:00 PM,112,1.8214,0.3304
+school-roundabout-to-soht,School Roundabout to SOHT,7:00 AM - 10:00 AM,112,1.3125,0.2031
+school-roundabout-to-soht,School Roundabout to SOHT,7:00 PM - 10:00 PM,112,2.8304,0.5826
+school-roundabout-to-sops,School Roundabout to SOPS,10:00 AM - 1:00 PM,112,1.1161,0.1540
+school-roundabout-to-sops,School Roundabout to SOPS,1:00 PM - 4:00 PM,112,1.1696,0.1674
+school-roundabout-to-sops,School Roundabout to SOPS,4:00 PM - 7:00 PM,112,1.5804,0.2701
+school-roundabout-to-sops,School Roundabout to SOPS,7:00 AM - 10:00 AM,112,1.2679,0.1920
+school-roundabout-to-sops,School Roundabout to SOPS,7:00 PM - 10:00 PM,112,2.5982,0.5246
+school-roundabout-to-sosc,School Roundabout to SOSC,10:00 AM - 1:00 PM,112,1.1339,0.1585
+school-roundabout-to-sosc,School Roundabout to SOSC,1:00 PM - 4:00 PM,112,1.2143,0.1786
+school-roundabout-to-sosc,School Roundabout to SOSC,4:00 PM - 7:00 PM,112,1.6696,0.2924
+school-roundabout-to-sosc,School Roundabout to SOSC,7:00 AM - 10:00 AM,112,1.2500,0.1875
+school-roundabout-to-sosc,School Roundabout to SOSC,7:00 PM - 10:00 PM,112,2.4911,0.4978
+school-roundabout-to-umuchimma-lodge-area,School Roundabout to Umuchimma lodge area,10:00 AM - 1:00 PM,112,1.2500,0.1875
+school-roundabout-to-umuchimma-lodge-area,School Roundabout to Umuchimma lodge area,1:00 PM - 4:00 PM,112,1.3214,0.2054
+school-roundabout-to-umuchimma-lodge-area,School Roundabout to Umuchimma lodge area,4:00 PM - 7:00 PM,112,1.9464,0.3616
+school-roundabout-to-umuchimma-lodge-area,School Roundabout to Umuchimma lodge area,7:00 AM - 10:00 AM,112,1.4286,0.2321
+school-roundabout-to-umuchimma-lodge-area,School Roundabout to Umuchimma lodge area,7:00 PM - 10:00 PM,112,2.8929,0.5982
+seet-to-etf-building,SEET to ETF Building,10:00 AM - 1:00 PM,112,1.1786,0.1696
+seet-to-etf-building,SEET to ETF Building,1:00 PM - 4:00 PM,112,1.2857,0.1964
+seet-to-etf-building,SEET to ETF Building,4:00 PM - 7:00 PM,112,1.8304,0.3326
+seet-to-etf-building,SEET to ETF Building,7:00 AM - 10:00 AM,112,1.3571,0.2143
+seet-to-etf-building,SEET to ETF Building,7:00 PM - 10:00 PM,112,2.6607,0.5402
+senate-building-to-administrative-block,Senate Building to Administrative Block,10:00 AM - 1:00 PM,112,1.1696,0.1674
+senate-building-to-administrative-block,Senate Building to Administrative Block,1:00 PM - 4:00 PM,112,1.1964,0.1741
+senate-building-to-administrative-block,Senate Building to Administrative Block,4:00 PM - 7:00 PM,112,1.7411,0.3103
+senate-building-to-administrative-block,Senate Building to Administrative Block,7:00 AM - 10:00 AM,112,1.3214,0.2054
+senate-building-to-administrative-block,Senate Building to Administrative Block,7:00 PM - 10:00 PM,112,2.6964,0.5491

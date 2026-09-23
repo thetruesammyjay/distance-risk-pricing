@@ -1,6 +1,6 @@
 const steps = [
   ['01', 'Route distance', 'The routing service obtains the authoritative distance and duration. The browser does not calculate the trip distance.'],
-  ['02', 'Route risk', 'Available accident, road, and security components are combined with configured weights. Missing components stay visible.'],
+  ['02', 'Route risk', 'The FUTO questionnaire supplies a route-and-time composite score. Its provenance and missing independent components stay visible.'],
   ['03', 'Demand', 'The current request-to-driver scenario becomes a capped multiplier and travels with its source label.'],
   ['04', 'Pricing', 'The active formula and coefficient version are stored with the quote so the number has a calculation trail.'],
 ];

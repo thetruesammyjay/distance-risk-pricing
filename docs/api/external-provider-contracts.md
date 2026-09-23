@@ -41,6 +41,9 @@ rejected when their shape or values are invalid.
 
 The prototype currently uses:
 
+- `RISK_MODE=futo_survey` reads the aggregate FUTO route/time questionnaire
+  profile. It exposes a composite `components.questionnaire` value and leaves
+  independent accident, road, and security values missing.
 - `RISK_MODE=open_meteo` calls the Open-Meteo Forecast API at `RISK_PROVIDER_URL`. It derives one weather-based road-condition component from precipitation, wind gusts, visibility, and WMO weather code. Accident and security remain missing and are not inferred.
 - `DEMAND_MODE=time_of_day` uses a deterministic academic scenario in the `Africa/Lagos` timezone. It generates synthetic request and driver counts from the configured time windows and does not make live traffic requests.
 

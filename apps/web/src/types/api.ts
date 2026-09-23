@@ -33,7 +33,7 @@ export type FareQuote = {
   risk: {
     score: number;
     classification: 'Low' | 'Moderate' | 'High' | 'Very High';
-    components: { accident: number | null; road: number | null; security: number | null };
+    components: { accident: number | null; road: number | null; security: number | null; questionnaire: number | null };
     components_available: string[];
     components_missing: string[];
     weight_strategy: string;

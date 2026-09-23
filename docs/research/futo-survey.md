@@ -44,6 +44,25 @@ A baseline comparison has now been run using the prepared labels and grouped
 validation. Its report is exploratory and must not be treated as evidence of
 real-world danger prediction. Physical route features remain pending the route
 catalog described below.
+
+## Runtime risk profile
+
+The live prototype consumes a privacy-preserving aggregate rather than the raw
+respondent export. Build it with:
+
+```powershell
+uv run python -m scripts.build_futo_risk_profile
+```
+
+This writes `data/processed/futo_route_risk_profile.csv`, containing one row
+per route/time band with its response count, mean ordinal label, and normalized
+questionnaire score. The aggregate contains no respondent demographics or
+free-text comments and is the file used by `RISK_MODE=futo_survey`.
+
+The runtime provider matches exact route/time profiles where endpoint
+coordinates are available. It uses an all-route time prior for surveyed routes
+whose endpoints are not yet present in the coordinate collection, and records
+that limitation in the API provenance.
 ## Baseline experiment
 
 The first comparison evaluates route-only, time-band-only, and combined
@@ -56,6 +75,6 @@ is local and ignored by Git:
 `data/processed/futo_model_comparison.json`
 
 These results are exploratory only. The survey target represents perceived route
-risk, and the export does not yet contain route coordinates, distances, or
-travel durations. No model from this experiment is connected to production fare
-estimation.
+risk. The aggregate profile is connected to the academic prototype's
+questionnaire risk mode, not to a production safety or crime-prediction
+system.

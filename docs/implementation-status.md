@@ -28,11 +28,16 @@
 
 - Added FUTO route/time ablations, class-balanced baseline comparisons, per-class recall, and fold confusion matrices.
 
+- Added the survey-backed `futo_survey` risk provider, a privacy-preserving
+  route/time aggregate profile, exact coordinate matching where available, and
+  an explicit all-route time-prior fallback.
+
 ## Planned
 
 - PostgreSQL integration tests against a managed or containerized database.
 - Compare the time-of-day demand scenario and external Open-Meteo signal against local observations.
-- Connect an empirically calibrated route-risk dataset before enabling production fare estimation.
+- Validate the questionnaire-derived risk profile against additional route-risk
+  observations before making production claims.
 - Replace the in-process rate limiter and metrics registry with shared production
   backends when running more than one API replica.
 - Add managed log/metric alerting, API-key rotation, and deployment load thresholds.

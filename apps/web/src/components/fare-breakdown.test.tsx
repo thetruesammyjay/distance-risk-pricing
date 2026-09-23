@@ -11,7 +11,7 @@ const quote = {
   risk: {
     score: 0.6,
     classification: 'High' as const,
-    components: { accident: 0.4, road: 0.5, security: 0.6 },
+    components: { accident: 0.4, road: 0.5, security: 0.6, questionnaire: null },
     components_available: ['accident'],
     components_missing: [],
     weight_strategy: 'configured_components',

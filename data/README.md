@@ -18,3 +18,12 @@ hard-coded coordinates or free-form mock locations.
 Rows are preserved as supplied, including duplicate endpoint names. Each row is
 assigned a stable row-based identifier so duplicate labels remain selectable and
 traceable to their original source record.
+
+## FUTO questionnaire risk profile
+
+`processed/futo_route_risk_profile.csv` is a derived aggregate of the raw FUTO
+road-risk questionnaire. It contains one row per surveyed route and time band,
+with response count, mean ordinal label, and normalized composite risk score.
+It intentionally excludes respondent demographics and free-text comments. The
+API uses this aggregate when `RISK_MODE=futo_survey`; the raw export remains
+local and is not required at runtime.

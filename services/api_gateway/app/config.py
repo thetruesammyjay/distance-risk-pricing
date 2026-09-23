@@ -37,9 +37,11 @@ class Settings(BaseSettings):
     pricing_formula_mode: Literal["additive", "multiplicative"] = "additive"
     pricing_formula_version: str = "v2-distance-base"
     pricing_coefficient_version: str = "prototype-v1"
-    risk_mode: Literal["simulated", "open_meteo", "external"] = "simulated"
+    risk_mode: Literal["simulated", "futo_survey", "open_meteo", "external"] = "futo_survey"
     risk_provider_url: str | None = None
     risk_provider_api_key: SecretStr | None = None
+    risk_survey_profile_path: str = "data/processed/futo_route_risk_profile.csv"
+    risk_survey_timezone: str = "Africa/Lagos"
     risk_accident_weight: Decimal = Field(default=Decimal("0.4"), ge=0)
     risk_road_weight: Decimal = Field(default=Decimal("0.3"), ge=0)
     risk_security_weight: Decimal = Field(default=Decimal("0.3"), ge=0)
