@@ -1042,8 +1042,8 @@ flowchart TD
 
 Set the Vercel project Root Directory to `apps/web`. The frontend's
 `package.json` and `package-lock.json` are located there, so Vercel can detect
-and build the Next.js application with the root `vercel.json` commands. Set
-these server-side environment variables:
+and build the Next.js application with `apps/web/vercel.json`. Set these
+server-side environment variables:
 
 ```env
 API_SERVER_URL=<RENDER_BACKEND_URL>
