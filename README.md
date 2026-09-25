@@ -1069,6 +1069,12 @@ the locked `psycopg-binary==3.2.3` dependency does not provide a CPython 3.14
 wheel. The Render Blueprint also sets the fully qualified `PYTHON_VERSION`
 value to `3.13.5`.
 
+Production API authentication requires `API_AUTH_ENABLED=true` and an
+`API_KEY` with at least 32 characters. The Blueprint generates `API_KEY` for
+new Blueprint deployments. For an existing Render service, add both values
+manually in the service's Environment settings. Use the same key as
+Vercel's `INTERNAL_API_KEY`.
+
 The Render Blueprint also sets `LOCATION_CATALOG_PATH` to `data/FUTO Route Endpoint Coordinate Collection.csv`. Keep that CSV committed to the repository so the deployed API can load the real FUTO locations.
 
 ### Database Deployment — Neon
