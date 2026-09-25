@@ -5,8 +5,13 @@ function endpoint(path: string) {
     const serverUrl = process.env.API_SERVER_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
     return `${serverUrl}${path}`;
   }
-  const browserUrl = process.env.NEXT_PUBLIC_API_URL;
-  return browserUrl ? `${browserUrl}${path}` : `/api/backend${path}`;
+  // Production requests must use the same-origin proxy so the server-only
+  // INTERNAL_API_KEY is attached without exposing it to the browser.
+  if (process.env.NODE_ENV !== 'production') {
+    const browserUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (browserUrl) return `${browserUrl}${path}`;
+  }
+  return `/api/backend${path}`;
 }
 
 export async function estimateFare(request: FareRequest): Promise<FareQuote> {

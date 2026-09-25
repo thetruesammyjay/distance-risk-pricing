@@ -1050,7 +1050,10 @@ API_SERVER_URL=<RENDER_BACKEND_URL>
 INTERNAL_API_KEY=<same-secret-as-render-API_KEY>
 ```
 
-Leave `NEXT_PUBLIC_API_URL` unset in production so requests use the proxy. The production frontend and Render backend must communicate over HTTPS.
+Leave `NEXT_PUBLIC_API_URL` unset in production so requests use the proxy. The
+production frontend and Render backend must communicate over HTTPS. Production
+browser requests are forced through `/api/backend` so the server-only
+`INTERNAL_API_KEY` is not exposed.
 
 ### Backend Deployment — Render
 
