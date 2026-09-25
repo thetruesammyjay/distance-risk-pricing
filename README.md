@@ -1054,8 +1054,13 @@ Leave `NEXT_PUBLIC_API_URL` unset in production so requests use the proxy. The p
 Typical start command:
 
 ```bash
-uv run uvicorn services.api_gateway.app.main:app --host 0.0.0.0 --port $PORT
+uv run --no-dev alembic upgrade head && uv run --no-dev uvicorn services.api_gateway.app.main:app --host 0.0.0.0 --port $PORT
 ```
+
+The migration runs before the API starts so a new Neon database receives the
+`fare_quotes` schema before the first quote is persisted. Keep the repository
+root as the Render service root so `pyproject.toml`, `uv.lock`, the FUTO CSV
+catalog, and the processed survey profile are all available at runtime.
 
 Production environment variables should include `DATABASE_URL`, `FRONTEND_URL`, `ROUTING_BASE_URL`, pricing configuration, and other required service credentials. Secrets must be configured through Render's environment management rather than committed to Git.
 
