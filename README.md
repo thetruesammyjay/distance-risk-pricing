@@ -1064,6 +1064,9 @@ catalog, and the processed survey profile are all available at runtime.
 
 Production environment variables should include `DATABASE_URL`, `FRONTEND_URL`, `ROUTING_BASE_URL`, pricing configuration, and other required service credentials. Secrets must be configured through Render's environment management rather than committed to Git.
 
+The Render Blueprint pins `PYTHON_VERSION` to `3.13.5` because the locked
+`psycopg-binary==3.2.3` dependency does not provide a CPython 3.14 wheel.
+
 The Render Blueprint also sets `LOCATION_CATALOG_PATH` to `data/FUTO Route Endpoint Coordinate Collection.csv`. Keep that CSV committed to the repository so the deployed API can load the real FUTO locations.
 
 ### Database Deployment — Neon

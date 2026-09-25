@@ -7,6 +7,9 @@ services:
     startCommand: uv run --no-dev alembic upgrade head && uv run --no-dev uvicorn services.api_gateway.app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
+      # psycopg-binary==3.2.3 has wheels through CPython 3.13, not 3.14.
+      - key: PYTHON_VERSION
+        value: "3.13.5"
       - key: APP_ENV
         value: production
       - key: DEBUG
