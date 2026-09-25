@@ -1040,7 +1040,10 @@ flowchart TD
 
 ### Frontend Deployment — Vercel
 
-Use the repository root as the Vercel project root; the root `vercel.json` builds the Next.js app in `apps/web`. Set these server-side environment variables:
+Set the Vercel project Root Directory to `apps/web`. The frontend's
+`package.json` and `package-lock.json` are located there, so Vercel can detect
+and build the Next.js application with the root `vercel.json` commands. Set
+these server-side environment variables:
 
 ```env
 API_SERVER_URL=<RENDER_BACKEND_URL>
