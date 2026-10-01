@@ -35,8 +35,14 @@ class Settings(BaseSettings):
     pricing_demand_sensitivity: Decimal = Field(default=Decimal("1"), ge=0)
     pricing_demand_cap: Decimal = Field(default=Decimal("2.5"), ge=1)
     pricing_formula_mode: Literal["additive", "multiplicative"] = "additive"
-    pricing_formula_version: str = "v2-distance-base"
-    pricing_coefficient_version: str = "prototype-v1"
+    pricing_risk_mode: Literal["tiered", "legacy"] = "tiered"
+    pricing_risk_uplift_moderate: Decimal = Field(default=Decimal("0.10"), ge=0, le=1)
+    pricing_risk_uplift_high: Decimal = Field(default=Decimal("0.25"), ge=0, le=1)
+    pricing_risk_uplift_very_high: Decimal = Field(default=Decimal("0.40"), ge=0, le=1)
+    pricing_max_total_multiplier: Decimal = Field(default=Decimal("2.0"), ge=1)
+    pricing_rounding_increment: Decimal = Field(default=Decimal("5"), gt=0)
+    pricing_formula_version: str = "v3-risk-uplift"
+    pricing_coefficient_version: str = "prototype-v2"
     risk_mode: Literal["simulated", "futo_survey", "open_meteo", "external"] = "futo_survey"
     risk_provider_url: str | None = None
     risk_provider_api_key: SecretStr | None = None
@@ -76,6 +82,14 @@ class Settings(BaseSettings):
         )
         if sum(weights, Decimal("0")) != Decimal("1"):
             raise ValueError("risk weights must sum to 1")
+        if not (
+            self.pricing_risk_uplift_moderate
+            <= self.pricing_risk_uplift_high
+            <= self.pricing_risk_uplift_very_high
+        ):
+            raise ValueError(
+                "pricing risk uplifts must not decrease from moderate to very high"
+            )
         if self.app_env == "production":
             if not self.database_url:
                 raise ValueError("DATABASE_URL is required in production")
