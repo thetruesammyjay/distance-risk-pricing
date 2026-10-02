@@ -151,6 +151,10 @@ class FareEstimationService:
                 formula_mode=fare.formula_mode,
                 formula_version=fare.formula_version,
                 coefficient_version=fare.coefficient_version,
+                risk_classification=fare.risk_classification,  # type: ignore[arg-type]
+                risk_uplift_pct=float(fare.risk_uplift_pct),
+                cap_applied=fare.cap_applied,
+                rounding_adjustment=float(fare.rounding_adjustment),
             ),
             timings_ms={**timings_ms, "database_persistence": 0.0},
         )

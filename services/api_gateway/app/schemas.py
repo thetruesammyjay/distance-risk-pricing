@@ -96,6 +96,12 @@ class FareResponse(BaseModel):
     formula_mode: Literal["additive", "multiplicative"]
     formula_version: str
     coefficient_version: str
+    # Added with the v3 risk-uplift rule. Defaults keep quotes saved by earlier
+    # versions readable.
+    risk_classification: Literal["Low", "Moderate", "High", "Very High"] | None = None
+    risk_uplift_pct: float = 0.0
+    cap_applied: bool = False
+    rounding_adjustment: float = 0.0
 
 
 class FareEstimateResponse(BaseModel):
