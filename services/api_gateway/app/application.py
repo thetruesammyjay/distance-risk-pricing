@@ -82,6 +82,12 @@ class FareEstimationService:
             formula_mode=self.settings.pricing_formula_mode,  # type: ignore[arg-type]
             formula_version=self.settings.pricing_formula_version,
             coefficient_version=self.settings.pricing_coefficient_version,
+            risk_mode=self.settings.pricing_risk_mode,  # type: ignore[arg-type]
+            risk_uplift_moderate=self.settings.pricing_risk_uplift_moderate,
+            risk_uplift_high=self.settings.pricing_risk_uplift_high,
+            risk_uplift_very_high=self.settings.pricing_risk_uplift_very_high,
+            max_total_multiplier=self.settings.pricing_max_total_multiplier,
+            rounding_increment=self.settings.pricing_rounding_increment,
         )
         fare = calculate_fare(
             PricingContext(
@@ -145,6 +151,10 @@ class FareEstimationService:
                 formula_mode=fare.formula_mode,
                 formula_version=fare.formula_version,
                 coefficient_version=fare.coefficient_version,
+                risk_classification=fare.risk_classification,  # type: ignore[arg-type]
+                risk_uplift_pct=float(fare.risk_uplift_pct),
+                cap_applied=fare.cap_applied,
+                rounding_adjustment=float(fare.rounding_adjustment),
             ),
             timings_ms={**timings_ms, "database_persistence": 0.0},
         )

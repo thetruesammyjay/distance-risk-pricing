@@ -13,6 +13,7 @@ def config(mode: str = "additive") -> PricingConfig:
         risk_rate=Decimal("10"),
         demand_sensitivity=Decimal("100"),
         demand_cap=Decimal("2.5"),
+        risk_mode="legacy",
         formula_mode=mode,  # type: ignore[arg-type]
     )
 
